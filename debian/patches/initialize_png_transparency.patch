@@ -1,0 +1,15 @@
+Index: libgdiplus/src/pngcodec.c
+===================================================================
+--- libgdiplus.orig/src/pngcodec.c	2014-08-27 18:51:11.175217773 +0100
++++ libgdiplus/src/pngcodec.c	2014-08-27 18:51:11.171217773 +0100
+@@ -350,8 +350,8 @@
+ 
+ 		if (png_get_valid (png_ptr, info_ptr, PNG_INFO_tRNS))
+ 		{
+-			png_bytep trans_alpha;
+-			int num_trans;
++			png_bytep trans_alpha = 0;
++			int num_trans = 0;
+ 			png_color_16p trans_color;
+ 
+ 			/* Make sure transparency is respected. */

@@ -1,0 +1,32 @@
+Source: libgdiplus
+Section: libs
+Priority: optional
+Maintainer: Debian Mono Group <pkg-mono-group@lists.alioth.debian.org>
+Uploaders: Mirco Bauer <meebey@debian.org>, Sebastian Dröge <slomo@debian.org>, Jo Shields <directhex@apebox.org>
+Build-Depends: 
+ debhelper (>= 7.0.50~), 
+ libglib2.0-dev (>= 2.2.3), 
+ libx11-dev, 
+ libxt-dev, 
+ libfontconfig1-dev, 
+ libfreetype6-dev, 
+ libxft-dev (>= 2.0), 
+ libpng-dev, 
+ libjpeg-dev, 
+ libtiff5-dev | libtiff-dev, 
+ libgif-dev, 
+ libexif-dev, 
+ libcairo2-dev (>= 1.4),
+ dh-autoreconf
+Standards-Version: 3.9.1
+Homepage: http://www.mono-project.com/Libgdiplus
+Vcs-Git: git://git.debian.org/git/pkg-mono/packages/libgdiplus.git
+Vcs-Browser: http://git.debian.org/?p=pkg-mono/packages/libgdiplus.git
+
+
+Package: libgdiplus
+Architecture: i386 kfreebsd-i386 powerpc amd64 kfreebsd-amd64 mipsel armel s390x armhf ppc64 ppc64el arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: interface library for System.Drawing of Mono
+ This package contains a GDI+ API compatible implementation needed by the
+ System.Drawing library of Mono.

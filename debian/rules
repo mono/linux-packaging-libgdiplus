@@ -1,0 +1,65 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+MAKEFILE = $(firstword $(MAKEFILE_LIST))
+DEBIAN_DIR = $(dir $(MAKEFILE))
+SOURCE_DIR = $(DEBIAN_DIR)/..
+
+DEB_VERSION = $(shell dpkg-parsechangelog -l$(DEBIAN_DIR)/changelog | grep ^Version | cut -d" " -f2)
+DEB_SOURCE_NAME = $(shell dpkg-parsechangelog -l$(DEBIAN_DIR)/changelog | grep ^Source | cut -d" " -f2)
+VERSION = $(shell echo $(DEB_VERSION) | cut -d"-" -f1 | sed 's/+dfsg.*//')
+
+
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+get-orig-source:
+	uscan \
+		--package $(DEB_SOURCE_NAME) \
+		--watchfile $(DEBIAN_DIR)/watch \
+		--upstream-version $(VERSION) \
+		--download-version $(VERSION) \
+		--destdir . \
+		--force-download \
+		--rename
+
+override_dh_auto_configure:
+	CFLAGS="$(CFLAGS)" ./configure \
+	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+	  --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
+	  --with-cairo=system
+	perl -pe 's/-Werror//' -i src/Makefile
+	
+override_dh_auto_build:
+	$(MAKE)
+	perl -pe 's,^Requires:.*,,; s,^Libs:.*,,; s,^Cflags:.*,,;' -i libgdiplus.pc
+
+override_dh_makeshlibs:
+	dh_makeshlibs -V
+
+override_dh_auto_install:
+	dh_auto_install
+	rm debian/libgdiplus/usr/lib/lib*.*a
+
+override_dh_auto_clean:
+	[ ! -f Makefile ] || $(MAKE) clean
+	rm -f config.status config.log
+	rm -f cairo/config.status cairo/config.log
+	rm -f Makefile.in aclocal.m4 configure
+	rm -f depcomp missing src/Makefile.in
+	rm -f tests/Makefile.in
+
+
+%:
+	dh $@ --with autoreconf

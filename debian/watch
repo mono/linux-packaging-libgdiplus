@@ -1,0 +1,2 @@
+version=2
+http://origin-download.mono-project.com/sources/libgdiplus/libgdiplus-([\d\.]+)\.tar\..*
