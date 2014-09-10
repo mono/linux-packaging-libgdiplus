@@ -1,0 +1,94 @@
+This file has a list of functionality not yet implemented or issues that
+have to be fixed in libgdiplus.
+
+---- Functionality not implemented
+
+* Image formats 
+
+- WMF and EMF. We have limited support metafiles.
+
+---- Not implemented / partially implemented functions
+
+* Handle functions
+
+Functions that use or create Win32 handles and are not yet implemented 
+(except for window and device needed in System.Windows.Forms.)
+
+GdipCreateBitmapFromResource
+GdipCreateFontFromDC
+GdipCreateFromHWND
+
+* Generic functions
+
+GdipBeginContainer2
+GdipBeginContainerI
+GdipGetPixelOffsetMode		[2]
+GdipGetTextContrast		[2]
+GdipSetPixelOffsetMode		[2]
+GdipSetTextContrast		[2]
+GdipTransformPoints
+GdipTransformPointsI
+
+* Image handeling
+
+GdipSetImageAttributesThreshold
+GdipSetImageAttributesOutputChannelColorProfile
+GdipGetImageAttributesAdjustedPalette
+GdipSetImageAttributesOutputChannel
+GdipLoadImageFromStream
+GdipSaveImageToStream
+GdipSaveAdd
+GdipSaveAddImage 
+
+* Pens and brushes
+
+GdipSetPenDashCap197819		[2]
+GdipGetPenDashCap197819		[2]
+GdipSetPenCustomStartCap	[3]
+GdipGetPenCustomStartCap	[3]
+GdipSetPenCustomEndCap		[3]
+GdipGetPenCustomEndCap		[3]
+
+* Functions related to paths
+
+GdipAddString			[1]
+GdipAddStringI			[1]
+GdipIsOutlineVisiblePathPoint	[4]
+GdipIsOutlineVisiblePathPointI	[4]
+GdipIsVisiblePathPoint		[4]
+GdipIsVisiblePathPointI		[4]
+GdipWindingModeOutline
+GdipWidenPath
+GdipWarpPath
+
+
+Notes
+[1] Partially implemented. LayoutRect and StringFormat are ignored.
+[2] Function exists (return Ok) but doesn't do anything (visually or not)
+[3] Function exists (return Ok) but only display a warning on the console
+[4] Partially implemented. GpGraphics is ignored.
+
+---- Known Limitations
+
+* Maximum of 32bpp
+
+	GDI+ supports bitmaps with more than 32bpp.
+	http://bugzilla.ximian.com/show_bug.cgi?id=80693
+
+* Coordinates limitations
+
+	GDI+ supports 32bips of precision (Cairo is limited to 15bits)
+	http://bugzilla.ximian.com/show_bug.cgi?id=79729
+
+* Cairo doesn't support 8-bit pseudocolor visuals
+
+	http://bugzilla.ximian.com/show_bug.cgi?id=77937
+
+* Cairo doesn't implement cairo_stroke_to_path
+
+	GdipWidenPath implementation depends on this feature.
+	http://bugzilla.ximian.com/show_bug.cgi?id=78110
+
+----
+
+last updated: August 9th, 2007
