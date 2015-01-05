@@ -1,3 +1,9 @@
+libgdiplus (3.12-0xamarin1) unstable; urgency=medium
+
+  * [e18186a] Imported Upstream version 3.12
+
+ -- Jo Shields <jo.shields@xamarin.com>  Mon, 05 Jan 2015 10:35:02 +0000
+
 libgdiplus (3.8-0xamarin1) unstable; urgency=medium
 
   * New upstream release (Closes: #688361)
