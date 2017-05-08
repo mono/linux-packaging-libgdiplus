@@ -22,7 +22,7 @@ Name:           libgdiplus0
 Version:        3.12
 Release:        0.xamarin.0
 Url:            http://go-mono.org/
-Source0:        http://download.mono-project.com/sources/%{real_name}/%{real_name}-%{version}.tar.gz
+Source0:        http://download.mono-project.com/sources/%{real_name}/%{name}-%{version}.tar.gz
 Summary:        Open Source Implementation of the GDI+ API
 License:        (LGPL-2.1+ or MPL-1.1) and MIT
 Group:          Development/Libraries/Other
