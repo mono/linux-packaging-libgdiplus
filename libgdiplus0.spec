@@ -19,8 +19,8 @@
 %define real_name libgdiplus
 
 Name:           libgdiplus0
-Version:	4.2
-Release:	0.xamarin.2
+Version:	5.6
+Release:	0.xamarin.1
 Url:            http://go-mono.org/
 Source0:        http://download.mono-project.com/sources/%{real_name}/%{name}-%{version}.tar.gz
 Summary:        Open Source Implementation of the GDI+ API
