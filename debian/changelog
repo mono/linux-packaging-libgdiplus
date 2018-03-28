@@ -1,3 +1,9 @@
+libgdiplus (4.2-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 28 Mar 2018 18:17:44 +0000
+
 libgdiplus (4.2-0xamarin4) alpha; urgency=medium
 
   * Packaging bugfix:
