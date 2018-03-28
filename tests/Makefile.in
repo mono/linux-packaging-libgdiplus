@@ -89,9 +89,17 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-noinst_PROGRAMS = testgdi$(EXEEXT) testbits$(EXEEXT) testclip$(EXEEXT) \
-	testreversepath$(EXEEXT)
-TESTS = testbits$(EXEEXT) testclip$(EXEEXT) testreversepath$(EXEEXT)
+@HAS_X11_FALSE@noinst_PROGRAMS = testbits$(EXEEXT) testclip$(EXEEXT) \
+@HAS_X11_FALSE@	testfont$(EXEEXT) testgraphics$(EXEEXT) \
+@HAS_X11_FALSE@	testreversepath$(EXEEXT) testpen$(EXEEXT) \
+@HAS_X11_FALSE@	testpng$(EXEEXT)
+@HAS_X11_TRUE@noinst_PROGRAMS = testbits$(EXEEXT) testclip$(EXEEXT) \
+@HAS_X11_TRUE@	testfont$(EXEEXT) testgraphics$(EXEEXT) \
+@HAS_X11_TRUE@	testreversepath$(EXEEXT) testpen$(EXEEXT) \
+@HAS_X11_TRUE@	testpng$(EXEEXT)
+TESTS = testbits$(EXEEXT) testclip$(EXEEXT) testfont$(EXEEXT) \
+	testgraphics$(EXEEXT) testreversepath$(EXEEXT) \
+	testpen$(EXEEXT) testpng$(EXEEXT)
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -112,8 +120,14 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 am_testclip_OBJECTS = testclip.$(OBJEXT)
 testclip_OBJECTS = $(am_testclip_OBJECTS)
-am_testgdi_OBJECTS = testgdi.$(OBJEXT)
-testgdi_OBJECTS = $(am_testgdi_OBJECTS)
+am_testfont_OBJECTS = testfont.$(OBJEXT)
+testfont_OBJECTS = $(am_testfont_OBJECTS)
+am_testgraphics_OBJECTS = testgraphics.$(OBJEXT)
+testgraphics_OBJECTS = $(am_testgraphics_OBJECTS)
+am_testpen_OBJECTS = testpen.$(OBJEXT)
+testpen_OBJECTS = $(am_testpen_OBJECTS)
+am_testpng_OBJECTS = testpng.$(OBJEXT)
+testpng_OBJECTS = $(am_testpng_OBJECTS)
 am_testreversepath_OBJECTS = testreversepath.$(OBJEXT)
 testreversepath_OBJECTS = $(am_testreversepath_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -150,10 +164,12 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(testbits_SOURCES) $(testclip_SOURCES) $(testgdi_SOURCES) \
+SOURCES = $(testbits_SOURCES) $(testclip_SOURCES) $(testfont_SOURCES) \
+	$(testgraphics_SOURCES) $(testpen_SOURCES) $(testpng_SOURCES) \
 	$(testreversepath_SOURCES)
 DIST_SOURCES = $(testbits_SOURCES) $(testclip_SOURCES) \
-	$(testgdi_SOURCES) $(testreversepath_SOURCES)
+	$(testfont_SOURCES) $(testgraphics_SOURCES) $(testpen_SOURCES) \
+	$(testpng_SOURCES) $(testreversepath_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -442,6 +458,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -515,6 +532,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -540,10 +558,10 @@ LDADDS = \
 	$(top_builddir)/src/libgdiplus.la \
 	-lm
 
-testgdi_DEPENDENCIES = $(TEST_DEPS)
-testgdi_LDADD = $(LDADDS)
-testgdi_SOURCES = \
-	testgdi.c
+@HAS_X11_TRUE@testgdi_DEPENDENCIES = $(TEST_DEPS)
+@HAS_X11_TRUE@testgdi_LDADD = $(LDADDS)
+@HAS_X11_TRUE@testgdi_SOURCES = \
+@HAS_X11_TRUE@	testgdi.c
 
 testbits_DEPENDENCIES = $(TEST_DEPS)
 testbits_LDADD = $(LDADDS)
@@ -555,15 +573,39 @@ testclip_SOURCES = \
 
 testclip_DEPENDENCIES = $(TEST_DEPS)
 testclip_LDADD = $(LDADDS)
+testfont_DEPENDENCIES = $(TEST_DEPS)
+testfont_LDADD = $(LDADDS)
+testfont_SOURCES = \
+	testfont.c
+
+testgraphics_SOURCES = \
+	testgraphics.c
+
+testgraphics_DEPENDENCIES = $(TEST_DEPS)
+testgraphics_LDADD = $(LDADDS)
 testreversepath_SOURCES = \
 	testreversepath.c
 
 testreversepath_DEPENDENCIES = $(TEST_DEPS)
 testreversepath_LDADD = $(LDADDS)
+testpen_SOURCES = \
+	testpen.c
+
+testpen_DEPENDENCIES = $(TEST_DEPS)
+testpen_LDADD = $(LDADDS)
+testpng_DEPENDENCIES = $(TEST_DEPS)
+testpng_LDADD = $(LDADDS)
+testpng_SOURCES = \
+	testpng.c
+
 EXTRA_DIST = \
 	$(testgdi_SOURCES)	\
 	$(testbits_SOURCES)	\
 	$(testclip_SOURCES)	\
+	$(testfont_SOURCES)	\
+	$(testgraphics_SOURCES)	\
+	$(testpen_SOURCES) \
+	$(testpng_SOURCES)	\
 	$(testreversepath_SOURCES)
 
 all: all-am
@@ -617,9 +659,21 @@ testclip$(EXEEXT): $(testclip_OBJECTS) $(testclip_DEPENDENCIES) $(EXTRA_testclip
 	@rm -f testclip$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testclip_OBJECTS) $(testclip_LDADD) $(LIBS)
 
-testgdi$(EXEEXT): $(testgdi_OBJECTS) $(testgdi_DEPENDENCIES) $(EXTRA_testgdi_DEPENDENCIES) 
-	@rm -f testgdi$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(testgdi_OBJECTS) $(testgdi_LDADD) $(LIBS)
+testfont$(EXEEXT): $(testfont_OBJECTS) $(testfont_DEPENDENCIES) $(EXTRA_testfont_DEPENDENCIES) 
+	@rm -f testfont$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testfont_OBJECTS) $(testfont_LDADD) $(LIBS)
+
+testgraphics$(EXEEXT): $(testgraphics_OBJECTS) $(testgraphics_DEPENDENCIES) $(EXTRA_testgraphics_DEPENDENCIES) 
+	@rm -f testgraphics$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgraphics_OBJECTS) $(testgraphics_LDADD) $(LIBS)
+
+testpen$(EXEEXT): $(testpen_OBJECTS) $(testpen_DEPENDENCIES) $(EXTRA_testpen_DEPENDENCIES) 
+	@rm -f testpen$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testpen_OBJECTS) $(testpen_LDADD) $(LIBS)
+
+testpng$(EXEEXT): $(testpng_OBJECTS) $(testpng_DEPENDENCIES) $(EXTRA_testpng_DEPENDENCIES) 
+	@rm -f testpng$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testpng_OBJECTS) $(testpng_LDADD) $(LIBS)
 
 testreversepath$(EXEEXT): $(testreversepath_OBJECTS) $(testreversepath_DEPENDENCIES) $(EXTRA_testreversepath_DEPENDENCIES) 
 	@rm -f testreversepath$(EXEEXT)
@@ -633,7 +687,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testbits.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testclip.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgdi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testfont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgraphics.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpng.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testreversepath.Po@am__quote@
 
 .c.o:
@@ -870,9 +927,37 @@ testclip.log: testclip$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testfont.log: testfont$(EXEEXT)
+	@p='testfont$(EXEEXT)'; \
+	b='testfont'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgraphics.log: testgraphics$(EXEEXT)
+	@p='testgraphics$(EXEEXT)'; \
+	b='testgraphics'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testreversepath.log: testreversepath$(EXEEXT)
 	@p='testreversepath$(EXEEXT)'; \
 	b='testreversepath'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testpen.log: testpen$(EXEEXT)
+	@p='testpen$(EXEEXT)'; \
+	b='testpen'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testpng.log: testpng$(EXEEXT)
+	@p='testpng$(EXEEXT)'; \
+	b='testpng'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1049,6 +1134,7 @@ uninstall-am:
 
 .PRECIOUS: Makefile
 
+@HAS_X11_TRUE@	testgdi ${noinst_PROGRAMS}
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

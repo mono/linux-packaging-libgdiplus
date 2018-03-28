@@ -1,4 +1,4 @@
-AC_INIT(libgdiplus, [4.2], 
+AC_INIT(libgdiplus, [5.6], 
 	[https://bugzilla.xamarin.com/enter_bug.cgi?product=Class%20Libraries&component=libgdiplus])
 	AC_CONFIG_SRCDIR([README])
 
@@ -19,8 +19,8 @@ fi
 GLIB_REQUIRED_VERSION="2.2.3"
 PKG_CHECK_MODULES(BASE_DEPENDENCIES, glib-2.0 >= $GLIB_REQUIRED_VERSION)
 
-GDIPLUS_LIBS="`pkg-config --libs glib-2.0 `"
-GDIPLUS_CFLAGS="`pkg-config --cflags glib-2.0 `"
+GDIPLUS_LIBS="`$PKG_CONFIG --libs glib-2.0 `"
+GDIPLUS_CFLAGS="`$PKG_CONFIG --cflags glib-2.0 `"
 
 CAIRO_REQUIRED_VERSION="1.6.4"
 PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_REQUIRED_VERSION)
@@ -112,6 +112,7 @@ case "$host" in
 		CFLAGS="-no-cpp-precomp $CFLAGS"
 		LDFLAGS="-flat_namespace -undefined suppress $LDFLAGS"
 		no_x=yes
+		no_libpng16=yes # workaround until we can upgrade the libpng used by bockbuild
 		;;
 
 	*)
@@ -119,12 +120,6 @@ case "$host" in
 		AC_DEFINE_UNQUOTED(OTHEROS,1,[Unknown])
 		;;
 esac
-
-# Add xrender here so that we don't fail to find glib if we won't have xrender.pc
-if test "x$no_x" != "xyes"; then
-   GDIPLUS_LIBS="$GDIPLUS_LIBS `pkg-config --libs xrender `"
-   GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS `pkg-config --cflags xrender `"
-fi
 
 # Apparently for BSD special handling needs to happen
 # See http://archives/neohapsis.com/archives/openbsd/2001-11/2142.html
@@ -196,6 +191,11 @@ fi
 AC_ARG_WITH(libexif,
 	[AC_HELP_STRING([--without-libexif], [disable EXIF support])])
 
+dnl If the user doesn't force a --prefix= then assume the OS default for resolcing libtiff etc
+case $prefix in
+NONE) prefix=$ac_default_prefix ;;
+esac
+
 dnl Test for libjpeg (this needs to be checked before libtiff, since libtiff depends on libjpeg)
 AC_ARG_WITH([libjpeg],
 	AS_HELP_STRING([--with-libjpeg=PREFIX],
@@ -223,7 +223,12 @@ AC_ARG_WITH([libjpeg],
         jpeg_ok=no)
       AC_MSG_RESULT($jpeg_ok)
       if test "$jpeg_ok" = yes; then
-        JPEG='jpeg'; LIBJPEG='-L${libjpeg_prefix}/lib -ljpeg'
+        JPEG='jpeg'; LIBJPEG="-ljpeg"
+
+        if test "$libjpeg_prefix" != "NONE"; then
+          LIBJPEG="$LIBJPEG -L$libjpeg_prefix"
+        fi
+
       else
         AC_MSG_WARN(*** JPEG loader will not be built (JPEG header file not found) ***)
       fi
@@ -308,45 +313,110 @@ else
 fi
 
 dnl Test for libpng
-    AC_MSG_CHECKING(for libpng14)
-    if $PKG_CONFIG --exists libpng14 ; then
+    libpng_found=no
+
+    AC_MSG_CHECKING(for libpng16)
+    if test "x$no_libpng16" != "x"; then
+      AC_MSG_RESULT(skipped)
+    elif $PKG_CONFIG --exists libpng16 ; then
       AC_MSG_RESULT(yes)
       PNG='png'
-      PNG_DEP_CFLAGS_PACKAGES=libpng14
-      LIBPNG=`$PKG_CONFIG --libs libpng14`
+      PNG_DEP_CFLAGS_PACKAGES=libpng16
+      LIBPNG=`$PKG_CONFIG --libs libpng16`
+      libpng_found=yes
     else
+      AC_MSG_RESULT(no)
+    fi
+
+    if test "x$libpng_found" != "xyes"; then
+      AC_MSG_CHECKING(for libpng14)
+      if $PKG_CONFIG --exists libpng14 ; then
+        AC_MSG_RESULT(yes)
+        PNG='png'
+        PNG_DEP_CFLAGS_PACKAGES=libpng14
+        LIBPNG=`$PKG_CONFIG --libs libpng14`
+        libpng_found=yes
+      else
+        AC_MSG_RESULT(no)
+      fi
+    fi
+
+    if test "x$libpng_found" != "xyes"; then
       AC_MSG_CHECKING(for libpng12)
       if $PKG_CONFIG --exists libpng12 ; then
         AC_MSG_RESULT(yes)
         PNG='png'
         PNG_DEP_CFLAGS_PACKAGES=libpng12
         LIBPNG=`$PKG_CONFIG --libs libpng12`
+        libpng_found=yes
       else
         AC_MSG_RESULT(no)
-        AC_CHECK_LIB(png, png_read_info,
-          [AC_CHECK_HEADER(png.h, png_ok=yes, png_ok=no)],
-          AC_MSG_ERROR(*** libpng12 not found. See http://www.libpng.org/pub/png/libpng.html.), -lz -lm)
+      fi
+    fi
+
+    if test "x$libpng_found" != "xyes"; then
+      AC_MSG_CHECKING(for png)
+      AC_CHECK_LIB(png, png_read_info,
+        [AC_CHECK_HEADER(png.h, png_ok=yes, png_ok=no)],
+        AC_MSG_ERROR(*** libpng12 not found. See http://www.libpng.org/pub/png/libpng.html.), -lz -lm)
+      if test "$png_ok" = yes; then
+        AC_MSG_CHECKING([for png_structp in png.h])
+        AC_TRY_COMPILE([#include <png.h>],
+          [png_structp pp; png_infop info; png_colorp cmap; png_create_read_struct;],
+          png_ok=yes,
+          png_ok=no)
+        AC_MSG_RESULT($png_ok)
         if test "$png_ok" = yes; then
-          AC_MSG_CHECKING([for png_structp in png.h])
-          AC_TRY_COMPILE([#include <png.h>],
-            [png_structp pp; png_infop info; png_colorp cmap; png_create_read_struct;],
-            png_ok=yes,
-            png_ok=no)
-          AC_MSG_RESULT($png_ok)
-          if test "$png_ok" = yes; then
-            PNG='png'; LIBPNG='-lpng -lz'
-          else
-            AC_MSG_ERROR(*** libpng12 found, but it is too old. See http://www.libpng.org/pub/png/libpng.html.)
-          fi
+          PNG='png'; LIBPNG='-lpng -lz'
         else
-            AC_MSG_ERROR(*** libpng12 not found. See http://www.libpng.org/pub/png/libpng.html.)
+          AC_MSG_ERROR(*** libpng12 found, but it is too old. See http://www.libpng.org/pub/png/libpng.html.)
         fi
+      else
+          AC_MSG_ERROR(*** libpng12 not found. See http://www.libpng.org/pub/png/libpng.html.)
       fi
     fi
 
 
 GDIPLUS_LIBS="$GDIPLUS_LIBS $LIBPNG"
 AC_DEFINE(HAVE_LIBPNG, 1, Define if png support is available. Always defined.)
+
+dnl
+dnl Test for X11. Allow compiling without x11 support using the without-x11
+dnl flag
+dnl
+
+AC_ARG_WITH(x11, 
+	[AC_HELP_STRING([--without-x11], [Disable X11 support])],
+	[disable_x11=yes])
+
+if test x$disable_x11 != xyes; then
+  AC_MSG_CHECKING(X11 support)
+  AC_TRY_COMPILE(
+    [#include <X11/Xlib.h>],
+    [],
+    [x11_available=yes],
+    [x11_available=no])
+
+  if test "x$x11_available" != "xyes"; then
+    AC_MSG_ERROR( [ Failed to compile with X11/Xlib.h include. You must fix your compiler paths ])
+  else
+    AC_MSG_RESULT(yes)
+  fi
+else
+  x11_available=no
+fi
+
+AS_IF(
+	[test x$x11_available = xyes],
+	[AC_DEFINE([HAS_X11], [1], [Define X11 support])],
+	[AC_DEFINE([HAS_X11], [0], [Skip X11 support])])
+AM_CONDITIONAL([HAS_X11], [test x$x11_available = xyes])
+
+# Add xrender here so that we don't fail to find glib if we won't have xrender.pc
+if test "x$no_x" != "xyes" && "x$x11_available" = "xyes"; then
+   GDIPLUS_LIBS="$GDIPLUS_LIBS `$PKG_CONFIG --libs xrender `"
+   GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS `$PKG_CONFIG --cflags xrender `"
+fi
 
 dnl Test for libexif
 if test x$with_libexif != xno && test -z "$LIBEXIF"; then
@@ -362,15 +432,6 @@ else
 	libexif_pkgconfig="No. You disabled it."
 fi
 AM_CONDITIONAL(HAVE_LIBEXIF, test x$libexif_pkgconfig = xyes)
-
-dnl
-dnl Produce a diagnostic, to reduce support time
-dnl
-AC_TRY_COMPILE([#include <X11/Xlib.h>],
-			 [],[x11_failed=false],[x11_failed=true])
-if $x11_failed; then
-   AC_ERROR("Failed to compile with X11/Xlib.h include.  You must fix your compiler paths")
-fi
 
 GDIPLUS_PKG_LIBS="$GDIPLUS_LIBS"
 GDIPLUS_PKG_CFLAGS="$GDIPLUS_CFLAGS"
@@ -396,6 +457,7 @@ echo "   * Installation prefix = $prefix"
 echo "   * Cairo = $cairo_info"
 echo "   * Text = $text_v"
 echo "   * EXIF tags = $libexif_pkgconfig"
+echo "   * X11 = $x11_available"
 echo "   * Codecs supported:"
 echo ""
 echo "      - TIFF: $tiff_ok"
