@@ -254,7 +254,7 @@ gdip_flip_y (GpImage *image)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipDisposeImage (GpImage *image)
 {
 	if (!image)
@@ -272,7 +272,7 @@ GdipDisposeImage (GpImage *image)
 }
 
 /* coverity[+alloc : arg-*1] */
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageGraphicsContext (GpImage *image, GpGraphics **graphics)
 {
 	GpGraphics	*gfx;
@@ -326,8 +326,8 @@ GdipGetImageGraphicsContext (GpImage *image, GpGraphics **graphics)
 	return Ok;
 }
 
-GpStatus 
-GdipDrawImageI (GpGraphics *graphics, GpImage *image, int x, int y)
+GpStatus WINGDIPAPI 
+GdipDrawImageI (GpGraphics *graphics, GpImage *image, INT x, INT y)
 {
 	if (!image)
 		return InvalidParameter;
@@ -346,8 +346,8 @@ GdipDrawImageI (GpGraphics *graphics, GpImage *image, int x, int y)
 	}
 }
 
-GpStatus 
-GdipDrawImage (GpGraphics *graphics, GpImage *image, float x, float y)
+GpStatus WINGDIPAPI 
+GdipDrawImage (GpGraphics *graphics, GpImage *image, REAL x, REAL y)
 {
 	if (!image)
 		return InvalidParameter;
@@ -366,14 +366,14 @@ GdipDrawImage (GpGraphics *graphics, GpImage *image, float x, float y)
 	}
 }
 
-GpStatus
-GdipDrawImageRectI (GpGraphics *graphics, GpImage *image, int x, int y, int width, int height)
+GpStatus WINGDIPAPI
+GdipDrawImageRectI (GpGraphics *graphics, GpImage *image, INT x, INT y, INT width, INT height)
 {
 	return GdipDrawImageRect (graphics, image, x, y, width, height);
 }
 
-GpStatus
-GdipDrawImageRect (GpGraphics *graphics, GpImage *image, float x, float y, float width, float height)
+GpStatus WINGDIPAPI
+GdipDrawImageRect (GpGraphics *graphics, GpImage *image, REAL x, REAL y, REAL width, REAL height)
 {
 	cairo_pattern_t *pattern;
 	cairo_pattern_t *org_pattern;
@@ -485,8 +485,8 @@ GdipDrawImageRect (GpGraphics *graphics, GpImage *image, float x, float y, float
 }
 
 /* points are upper left, upper right, lower left. fourth point is extrapolated. */
-GpStatus
-GdipDrawImagePoints (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *dstPoints, int count)
+GpStatus WINGDIPAPI
+GdipDrawImagePoints (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *dstPoints, INT count)
 {
 	cairo_pattern_t	*pattern;
 	cairo_pattern_t	*org_pattern;
@@ -581,8 +581,8 @@ GdipDrawImagePoints (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *d
 	return Ok;
 }
 
-GpStatus
-GdipDrawImagePointsI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint *dstPoints, int count)
+GpStatus WINGDIPAPI
+GdipDrawImagePointsI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint *dstPoints, INT count)
 {
 	GpPointF points[3];
 	int i;
@@ -598,25 +598,25 @@ GdipDrawImagePointsI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint *d
 	return GdipDrawImagePoints (graphics, image, points, 3);
 }
 
-GpStatus
-GdipDrawImagePointRect (GpGraphics *graphics, GpImage *image, float x, float y, float srcx, float srcy, 
-	float srcwidth, float srcheight, GpUnit srcUnit)
+GpStatus WINGDIPAPI
+GdipDrawImagePointRect (GpGraphics *graphics, GpImage *image, REAL x, REAL y, REAL srcx, REAL srcy,
+	REAL srcwidth, REAL srcheight, GpUnit srcUnit)
 {
 	return GdipDrawImageRectRect (graphics, image, x, y, srcwidth, srcheight, srcx, srcy, 
 		srcwidth, srcheight, srcUnit, NULL, NULL, NULL);
 }
 
-GpStatus
-GdipDrawImagePointRectI (GpGraphics *graphics, GpImage *image, int x, int y, int srcx, int srcy, 
-	int srcwidth, int srcheight, GpUnit srcUnit)
+GpStatus WINGDIPAPI
+GdipDrawImagePointRectI (GpGraphics *graphics, GpImage *image, INT x, INT y, INT srcx, INT srcy,
+	INT srcwidth, INT srcheight, GpUnit srcUnit)
 {
 	return GdipDrawImagePointRect (graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
-                       float dstx, float dsty, float dstwidth, float dstheight,
-                       float srcx, float srcy, float srcwidth, float srcheight,
+                       REAL dstx, REAL dsty, REAL dstwidth, REAL dstheight,
+                       REAL srcx, REAL srcy, REAL srcwidth, REAL srcheight,
                        GpUnit srcUnit,
                        GDIPCONST GpImageAttributes *imageAttributes,
                        DrawImageAbort callback, void *callbackData)
@@ -945,9 +945,9 @@ GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
 	return Ok;
 }
 
-GpStatus
-GdipDrawImageRectRectI (GpGraphics *graphics, GpImage *image, int dstx, int dsty, int dstwidth, int dstheight, 
-	int srcx, int srcy, int srcwidth, int srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes,
+GpStatus WINGDIPAPI
+GdipDrawImageRectRectI (GpGraphics *graphics, GpImage *image, INT dstx, INT dsty, INT dstwidth, INT dstheight,
+	INT srcx, INT srcy, INT srcwidth, INT srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes,
 	DrawImageAbort callback, void *callbackData)
 {
 	return GdipDrawImageRectRect (graphics, image, dstx, dsty, dstwidth, dstheight,
@@ -956,9 +956,9 @@ GdipDrawImageRectRectI (GpGraphics *graphics, GpImage *image, int dstx, int dsty
 					imageAttributes, callback, callbackData);
 }
 
-GpStatus
-GdipDrawImagePointsRect (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *points, int count, float srcx, float srcy,
-	float srcwidth, float srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes, DrawImageAbort callback, 
+GpStatus WINGDIPAPI
+GdipDrawImagePointsRect (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *points, INT count, REAL srcx, REAL srcy,
+	REAL srcwidth, REAL srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes, DrawImageAbort callback,
 	void *callbackData)
 {
 	GpRectF rect;
@@ -995,9 +995,9 @@ GdipDrawImagePointsRect (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint
 	return status;
 }
 
-GpStatus
-GdipDrawImagePointsRectI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint *points, int count, int srcx, int srcy, 
-	int srcwidth, int srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes, DrawImageAbort callback,
+GpStatus WINGDIPAPI
+GdipDrawImagePointsRectI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoint *points, INT count, INT srcx, INT srcy,
+	INT srcwidth, INT srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes *imageAttributes, DrawImageAbort callback,
 	void *callbackData)
 {
 	GpPointF pf[3];
@@ -1021,20 +1021,20 @@ GdipDrawImagePointsRectI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoin
 /*
  * These two will never be implemented, as 'stream' is a COM IStream
  */
-GpStatus
+GpStatus WINGDIPAPI
 GdipLoadImageFromStream (void *stream, GpImage **image)
 {
 	return NotImplemented; /* GdipLoadImageFromStream - not supported */
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSaveImageToStream (GpImage *image, void *stream, GDIPCONST CLSID *encoderCLSID, GDIPCONST EncoderParameters *params)
 {
 	return NotImplemented; /* GdipSaveImageToStream - not supported */
 }
 
 /* coverity[+alloc : arg-*1] */
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipLoadImageFromFile (GDIPCONST WCHAR *file, GpImage **image)
 {
 	FILE		*fp = NULL;
@@ -1144,7 +1144,7 @@ gdip_get_imageformat_from_codec_clsid (CLSID *encoderCLSID)
     	return INVALID;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSaveImageToFile (GpImage *image, GDIPCONST WCHAR *file, GDIPCONST CLSID *encoderCLSID, GDIPCONST EncoderParameters *params)
 {
 	FILE *fp = 0;
@@ -1205,7 +1205,7 @@ GdipSaveImageToFile (GpImage *image, GDIPCONST WCHAR *file, GDIPCONST CLSID *enc
 	return status;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageBounds (GpImage *image, GpRectF *rect, GpUnit *unit)
 {
 	if (!image || !rect || !unit)
@@ -1234,8 +1234,8 @@ GdipGetImageBounds (GpImage *image, GpRectF *rect, GpUnit *unit)
 	return Ok;
 }
 
-GpStatus 
-GdipGetImageDimension (GpImage *image, float *width, float *height)
+GpStatus WINGDIPAPI 
+GdipGetImageDimension (GpImage *image, REAL *width, REAL *height)
 {
 	if (!image || !width || !height)
 		return InvalidParameter;
@@ -1257,7 +1257,7 @@ GdipGetImageDimension (GpImage *image, float *width, float *height)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageType (GpImage *image, ImageType *type)
 {
 	if (!image || !type)
@@ -1267,7 +1267,7 @@ GdipGetImageType (GpImage *image, ImageType *type)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageWidth (GpImage *image, UINT *width)
 {
 	if (!image || !width)
@@ -1286,7 +1286,7 @@ GdipGetImageWidth (GpImage *image, UINT *width)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageHeight (GpImage *image, UINT *height)
 {
 	if (!image || !height)
@@ -1305,8 +1305,8 @@ GdipGetImageHeight (GpImage *image, UINT *height)
 	return Ok;
 }
 
-GpStatus 
-GdipGetImageHorizontalResolution (GpImage *image, float *resolution)
+GpStatus WINGDIPAPI 
+GdipGetImageHorizontalResolution (GpImage *image, REAL *resolution)
 {
 	if (!image || !resolution)
 		return InvalidParameter;
@@ -1324,8 +1324,8 @@ GdipGetImageHorizontalResolution (GpImage *image, float *resolution)
 	return Ok;
 }
 
-GpStatus 
-GdipGetImageVerticalResolution (GpImage *image, float *resolution)
+GpStatus WINGDIPAPI 
+GdipGetImageVerticalResolution (GpImage *image, REAL *resolution)
 {
 	if (!image || !resolution)
 		return InvalidParameter;
@@ -1343,7 +1343,7 @@ GdipGetImageVerticalResolution (GpImage *image, float *resolution)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImageFlags (GpImage *image, UINT *flags)
 {
 	if (!image || !flags)
@@ -1362,7 +1362,7 @@ GdipGetImageFlags (GpImage *image, UINT *flags)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageRawFormat (GpImage *image, GUID *format)
 {
 	if (!image || !format)
@@ -1405,7 +1405,7 @@ GdipGetImageRawFormat (GpImage *image, GUID *format)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetImagePixelFormat (GpImage *image, PixelFormat *format)
 {
 	if (!image || !format)
@@ -1424,7 +1424,7 @@ GdipGetImagePixelFormat (GpImage *image, PixelFormat *format)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipImageGetFrameDimensionsCount (GpImage *image, UINT *count)
 {
 	if (!image || !count)
@@ -1443,7 +1443,7 @@ GdipImageGetFrameDimensionsCount (GpImage *image, UINT *count)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipImageGetFrameDimensionsList (GpImage *image, GUID *dimensionGUID, UINT count)
 {
 	if (!image || !dimensionGUID)
@@ -1475,7 +1475,7 @@ GdipImageGetFrameDimensionsList (GpImage *image, GUID *dimensionGUID, UINT count
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipImageGetFrameCount (GpImage *image, GDIPCONST GUID *dimensionGUID, UINT* count)
 {
 	if (!image || !dimensionGUID || !count)
@@ -1501,7 +1501,7 @@ GdipImageGetFrameCount (GpImage *image, GDIPCONST GUID *dimensionGUID, UINT* cou
 	return InvalidParameter;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipImageSelectActiveFrame (GpImage *image, GDIPCONST GUID *dimensionGUID, UINT index)
 {
 	if (!image || !dimensionGUID)
@@ -1819,7 +1819,7 @@ gdip_rotate_flip_packed_indexed (GpImage *image, PixelFormat pixel_format, int a
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipImageRotateFlip (GpImage *image, RotateFlipType type)
 {
 	int	angle;
@@ -1878,8 +1878,8 @@ GdipImageRotateFlip (GpImage *image, RotateFlipType type)
 	}
 }
 
-GpStatus 
-GdipGetImagePalette (GpImage *image, ColorPalette *palette, int size)
+GpStatus WINGDIPAPI 
+GdipGetImagePalette (GpImage *image, ColorPalette *palette, INT size)
 {
 	int palette_entries;
 	int bytes_needed;
@@ -1916,7 +1916,7 @@ GdipGetImagePalette (GpImage *image, ColorPalette *palette, int size)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipSetImagePalette (GpImage *image, GDIPCONST ColorPalette *palette)
 {
 	int size;
@@ -1939,8 +1939,8 @@ GdipSetImagePalette (GpImage *image, GDIPCONST ColorPalette *palette)
 	return Ok;
 }
 
-GpStatus 
-GdipGetImagePaletteSize (GpImage *image, int* size)
+GpStatus WINGDIPAPI 
+GdipGetImagePaletteSize (GpImage *image, INT* size)
 {
         int palette_entries;
 
@@ -1960,7 +1960,7 @@ GdipGetImagePaletteSize (GpImage *image, int* size)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetPropertyCount (GpImage *image, UINT *propertyNumber)
 {
 	if (!image || !propertyNumber)
@@ -1979,7 +1979,7 @@ GdipGetPropertyCount (GpImage *image, UINT *propertyNumber)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetPropertyIdList (GpImage *image, UINT propertyNumber, PROPID *list)
 {
 	int	i;
@@ -2001,7 +2001,7 @@ GdipGetPropertyIdList (GpImage *image, UINT propertyNumber, PROPID *list)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetPropertyItemSize (GpImage *image, PROPID propID, UINT *size)
 {
 	int	index;
@@ -2022,7 +2022,7 @@ GdipGetPropertyItemSize (GpImage *image, PROPID propID, UINT *size)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetPropertyItem (GpImage *image, PROPID propID, UINT size, PropertyItem *buffer)
 {
 	int	index;
@@ -2050,7 +2050,7 @@ GdipGetPropertyItem (GpImage *image, PROPID propID, UINT size, PropertyItem *buf
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipGetPropertySize (GpImage *image, UINT *totalBufferSize, UINT *numProperties)
 {
 	UINT	size;
@@ -2074,7 +2074,7 @@ GdipGetPropertySize (GpImage *image, UINT *totalBufferSize, UINT *numProperties)
 	return Ok;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipRemovePropertyItem (GpImage *image, PROPID propID)
 {
 	if (!image)
@@ -2087,7 +2087,7 @@ GdipRemovePropertyItem (GpImage *image, PROPID propID)
 	return gdip_bitmapdata_property_remove_id(image->active_bitmap, propID);
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipSetPropertyItem(GpImage *image, GDIPCONST PropertyItem *item)
 {
 	int	i;
@@ -2148,7 +2148,7 @@ GdipSetPropertyItem(GpImage *image, GDIPCONST PropertyItem *item)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipCloneImage (GpImage *image, GpImage **cloneImage)
 {
 	if (!image || !cloneImage)
@@ -2241,7 +2241,7 @@ gdip_get_pixel_format_components(PixelFormat pixfmt)
 	return 0;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipLoadImageFromDelegate_linux (GetHeaderDelegate getHeaderFunc,
 								 GetBytesDelegate getBytesFunc,
 								 PutBytesDelegate putBytesFunc,
@@ -2313,7 +2313,7 @@ GdipLoadImageFromDelegate_linux (GetHeaderDelegate getHeaderFunc,
 	return status;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSaveImageToDelegate_linux (GpImage *image, GetBytesDelegate getBytesFunc, PutBytesDelegate putBytesFunc,
 	SeekDelegate seekFunc, CloseDelegate closeFunc, SizeDelegate sizeFunc, GDIPCONST CLSID *encoderCLSID,
 	GDIPCONST EncoderParameters *params)
@@ -2441,7 +2441,7 @@ void releaseCodecList (void)
 	}
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageDecodersSize (UINT *numDecoders, UINT *size)
 {       
 	if (!numDecoders || !size)
@@ -2452,7 +2452,7 @@ GdipGetImageDecodersSize (UINT *numDecoders, UINT *size)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageDecoders (UINT numDecoders, UINT size, ImageCodecInfo *decoders)
 {
 	if (!decoders || (numDecoders != g_decoders) || (size != sizeof (ImageCodecInfo) * g_decoders))
@@ -2462,7 +2462,7 @@ GdipGetImageDecoders (UINT numDecoders, UINT size, ImageCodecInfo *decoders)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageEncodersSize (UINT *numEncoders, UINT *size)
 {
 	if (!numEncoders || !size)
@@ -2473,7 +2473,7 @@ GdipGetImageEncodersSize (UINT *numEncoders, UINT *size)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageEncoders (UINT numEncoders, UINT size, ImageCodecInfo *encoders)
 {
 	if (!encoders || (numEncoders != g_encoders) || (size != sizeof (ImageCodecInfo) * g_encoders))
@@ -2483,7 +2483,7 @@ GdipGetImageEncoders (UINT numEncoders, UINT size, ImageCodecInfo *encoders)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetAllPropertyItems (GpImage *image, UINT totalBufferSize, UINT numProperties, PropertyItem *allItems)
 {
 	int		size;
@@ -2528,7 +2528,7 @@ GdipGetAllPropertyItems (GpImage *image, UINT totalBufferSize, UINT numPropertie
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetEncoderParameterListSize (GpImage *image, GDIPCONST CLSID *clsidEncoder, UINT *size)
 {
 	ImageFormat fmt;
@@ -2552,7 +2552,7 @@ GdipGetEncoderParameterListSize (GpImage *image, GDIPCONST CLSID *clsidEncoder, 
 	return FileNotFound;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetEncoderParameterList (GpImage *image, GDIPCONST CLSID *clsidEncoder, UINT size, EncoderParameters *buffer)
 {
 	ImageFormat fmt;
@@ -2574,7 +2574,7 @@ GdipGetEncoderParameterList (GpImage *image, GDIPCONST CLSID *clsidEncoder, UINT
 	return FileNotFound;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetImageThumbnail (GpImage *image, UINT thumbWidth, UINT thumbHeight, GpImage **thumbImage, GetThumbnailImageAbort callback, VOID *callbackData)
 {
 	/* We don't really need to implement this; we've got it handled in System.Drawing directly */
@@ -2582,7 +2582,7 @@ GdipGetImageThumbnail (GpImage *image, UINT thumbWidth, UINT thumbHeight, GpImag
 }
 
 /* coverity[+alloc : arg-*1] */
-GpStatus
+GpStatus WINGDIPAPI
 GdipLoadImageFromFileICM (GDIPCONST WCHAR* filename, GpImage **image)
 {
 	return GdipLoadImageFromFile (filename, image);
@@ -2606,7 +2606,7 @@ gdip_find_encoder_parameter (GDIPCONST EncoderParameters *eps, const GUID *guid)
 	tiff format
 */
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSaveAdd (GpImage *image, GDIPCONST EncoderParameters* encoderParams)
 {
 	if (!image || !encoderParams)
@@ -2614,7 +2614,7 @@ GdipSaveAdd (GpImage *image, GDIPCONST EncoderParameters* encoderParams)
 	return NotImplemented;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI 
 GdipSaveAddImage (GpImage *image, GpImage *imageNew, GDIPCONST EncoderParameters *params)
 {
 	if (!image || !imageNew || !params)

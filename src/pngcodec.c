@@ -279,7 +279,13 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 		png_set_read_fn (png_ptr, getBytesFunc, _gdip_png_stream_read_data);
 	}
 
-	png_read_png (png_ptr, info_ptr, 0, NULL);
+	/* Pass PNG_TRANSFORM_STRIP_16, which basically reduces the color palette from 16-bits to 8-bits
+	 * for 16-bit color depths. The current implementation of libgdiplus doesn't handle bit depths > 8,
+	 * so this acts as a workaround. Net impact is that the quality of the image is slightly reduced instead
+	 * of refusing to process the image (and potentially crashing the application) altogether;
+	 * proper support would mean supporting 16-bit color channels.
+	 * Partially fixes http://bugzilla.ximian.com/show_bug.cgi?id=80693 */
+	png_read_png (png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16, NULL);
 
 	bit_depth = png_get_bit_depth (png_ptr, info_ptr);
 	channels = png_get_channels (png_ptr, info_ptr);
@@ -364,15 +370,18 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 				}
 
 				for (i=0; i < num_trans; i++) {
+					png_bytep alpha =
+#if (PNG_LIBPNG_VER > 10399)
+						(png_bytep)trans_alpha[i];
+#else
+						info_ptr->trans[i];
+#endif
+
 					set_pixel_bgra(&palette->Entries[i], 0,
 							png_palette[i].blue,
 							png_palette[i].green,
 							png_palette[i].red,
-#if PNG_LIBPNG_VER > 10399
-							trans_alpha [i]); /* alpha */
-#else
-							info_ptr->trans[i]); /* alpha */
-#endif
+							(unsigned char)alpha);
 				}
 			}
 		}
@@ -418,6 +427,7 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 		png_bytep *row_pointers;
 		BYTE *rawptr;
 		int i, j;
+		BYTE	alpha[4];	/* transparency values for 2bpp */
 
 		width = png_get_image_width (png_ptr, info_ptr);
 		height = png_get_image_height (png_ptr, info_ptr);
@@ -432,24 +442,6 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 
 		interlace = png_get_interlace_type (png_ptr, info_ptr);
 
-		/* According to the libpng manual, this sequence is equivalent to
-		* using the PNG_TRANSFORM_EXPAND flag in png_read_png. */
-		if (color_type == PNG_COLOR_TYPE_PALETTE) {
-			png_set_palette_to_rgb (png_ptr);
-		}
-
-		if ((color_type == PNG_COLOR_TYPE_GRAY) && (bit_depth < 8)) {
-#if PNG_LIBPNG_VER > 10399
-			png_set_expand_gray_1_2_4_to_8 (png_ptr);
-#else
-			png_set_gray_1_2_4_to_8(png_ptr);
-#endif
-		}
-
-		if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-			png_set_tRNS_to_alpha(png_ptr);
-		}
-
 		stride = (width * 4);
 		gdip_align_stride (stride);
 
@@ -463,16 +455,12 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 				for (i = 0; i < height; i++) {
 					png_bytep rowp = row_pointers[i];
 					for (j = 0; j < width; j++) {
+						BYTE b = rowp[2];
+						BYTE g = rowp[1];
+						BYTE r = rowp[0];
 						BYTE a = rowp[3];
-						if (a == 0) {
-							set_pixel_bgra (rawptr, 0, 0, 0, 0, 0);
-						} else {
-							BYTE b = rowp[2];
-							BYTE g = rowp[1];
-							BYTE r = rowp[0];
 
-							set_pixel_bgra (rawptr, 0, b, g, r, a);
-						}
+						set_pixel_bgra (rawptr, 0, b, g, r, a);
 						rowp += 4;
 						rawptr += 4;
 					}
@@ -492,12 +480,37 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 				break;
 			}
 
-			case 1:
+			case 2: {
 				for (i = 0; i < height; i++) {
 					png_bytep rowp = row_pointers[i];
+					for (j = 0; j < width; j++) {
+						set_pixel_bgra (rawptr, 0, rowp[0], rowp[0], rowp[0], rowp[1]);
+						rowp += 2;
+						rawptr += 4;
+					}
+				}
+				break;
+			}
+
+			case 1:
+				if (bit_depth == 2) {
+					/* Make sure transparency is respected for 2bpp images. */
+					memset(alpha, 0xFF, 4);	/* default to fully opaque */
+					int num_trans = 0;
+					BYTE * trans = NULL;
+					png_color_16p dummy;
+					if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &dummy)) {
+						if (num_trans > 0 && trans != NULL) {
+							memcpy(alpha, trans, MIN(num_trans, 4));
+						}
+					}
+				}
+				for (i = 0; i < height; i++) {
+					png_bytep rowp = row_pointers[i];
+					rawptr = rawdata + i * stride;	/* Ensure each output row starts at the right place. */
 					if (bit_depth == 2) {
 						// 4 pixels for each byte
-						for (j = 0; j < (width >> bit_depth); j++) {
+						for (j = 0; j < width; j++) {
 							png_byte palette = 0;
 							png_byte pix = *rowp++;
 
@@ -506,28 +519,34 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 								png_palette[palette].blue,
 								png_palette[palette].green,
 								png_palette[palette].red,
-								0xFF); /* alpha */
+								alpha[palette]);
+							if (++j >= width)
+								break;
 
 							palette = (pix >> 4) & 0x03;
 							set_pixel_bgra (rawptr, 4,
 								png_palette[palette].blue,
 								png_palette[palette].green,
 								png_palette[palette].red,
-								0xFF); /* alpha */
+								alpha[palette]);
+							if (++j >= width)
+								break;
 
 							palette = (pix >> 2) & 0x03;
 							set_pixel_bgra (rawptr, 8,
 								png_palette[palette].blue,
 								png_palette[palette].green,
 								png_palette[palette].red,
-								0xFF); /* alpha */
+								alpha[palette]);
+							if (++j >= width)
+								break;
 
 							palette = pix & 0x03;
 							set_pixel_bgra (rawptr, 12,
 								png_palette[palette].blue,
 								png_palette[palette].green,
 								png_palette[palette].red,
-								0xFF); /* alpha */
+								alpha[palette]);
 							rawptr += 16;
 						}
 					} else {
@@ -568,6 +587,10 @@ gdip_load_png_image_from_file_or_stream (FILE *fp, GetBytesDelegate getBytesFunc
 			// doesn't apply to 2bpp images
 			result->active_bitmap->pixel_format = PixelFormat8bppIndexed;
 			result->active_bitmap->image_flags = ImageFlagsColorSpaceGRAY;
+		} else if ((channels == 1) && (color_type == PNG_COLOR_TYPE_PALETTE)) {
+			// does apply to (what were) 2bpp images
+			result->active_bitmap->image_flags = ImageFlagsColorSpaceRGB;
+			result->active_bitmap->image_flags |= ImageFlagsHasAlpha;
 		}
 
 		if (color_type & PNG_COLOR_MASK_ALPHA)
@@ -693,6 +716,7 @@ gdip_save_png_image_to_file_or_stream (FILE *fp, PutBytesDelegate putBytesFunc, 
 
 	if (gdip_is_an_indexed_pixelformat (image->active_bitmap->pixel_format)) {
 		png_color palette[256];
+		png_byte trans_alpha[256];
 
 		int palette_entries = image->active_bitmap->palette->Count;
 		if (image->active_bitmap->pixel_format == PixelFormat4bppIndexed) {
@@ -701,13 +725,13 @@ gdip_save_png_image_to_file_or_stream (FILE *fp, PutBytesDelegate putBytesFunc, 
 
 		for (i=0; i < palette_entries; i++) {
 			ARGB entry = image->active_bitmap->palette->Entries[i];
-
-			int dummy;
-
-			get_pixel_bgra(entry, palette[i].blue, palette[i].green, palette[i].red, dummy);
+			get_pixel_bgra(entry, palette[i].blue, palette[i].green, palette[i].red, trans_alpha[i]);
 		}
 
 		png_set_PLTE (png_ptr, info_ptr, palette, palette_entries);
+		if ((image->active_bitmap->palette->Flags & PaletteFlagsHasAlpha) == PaletteFlagsHasAlpha) {
+			png_set_tRNS (png_ptr, info_ptr, trans_alpha, palette_entries, NULL);
+		}
 	}
 
 	png_set_filter (png_ptr, 0, PNG_NO_FILTERS);

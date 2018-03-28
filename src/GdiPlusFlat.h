@@ -34,6 +34,12 @@ extern "C"
 #endif
 
 /*
+ * WINGDIPAPI is used to define the visibility of the GDI+ functions. If you're including GdiPlusFlat.h
+ * file, you're using the public header, consuming GDI+, so the GDI+ functions are not exported in your library.
+ */
+#define WINGDIPAPI
+
+/*
  * If you ever need a workaround specific to libgdiplus then use the following define
  */
 
@@ -56,6 +62,7 @@ typedef void GpImage;
 typedef void GpImageAttributes;
 typedef void GpLineGradient;
 typedef void GpMatrix;
+typedef void GpMetafile;
 typedef void GpPath;
 typedef void GpPathIterator;
 typedef void GpPathGradient;
@@ -99,15 +106,20 @@ typedef struct {
 #include "fontfamily.h"
 #include "graphics.h"
 #include "graphics-path.h"
+#include "graphics-pathiterator.h"
 #include "hatchbrush.h"
 #include "image.h"
 #include "imageattributes.h"
-#include "pen.h"
+#include "lineargradientbrush.h"
 #include "matrix.h"
+#include "metafile.h"
+#include "pathgradientbrush.h"
+#include "pen.h"
 #include "region.h"
 #include "solidbrush.h"
 #include "stringformat.h"
 #include "text.h"
+#include "texturebrush.h"
 
 #ifdef __cplusplus
 }

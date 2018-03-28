@@ -23,6 +23,7 @@
  *   Alexandre Pigolkine(pigolkine@gmx.de)
  *   Duncan Mak (duncan@ximian.com)
  *   Sebastien Pouliot  <sebastien@ximian.com>
+ *   Frederik Carlier <frederik.carlier@quamotion.mobi>
  */
 
 #include "general-private.h"
@@ -36,7 +37,7 @@
 
 static BOOL startup = FALSE;
 
-GpStatus 
+GpStatus WINGDIPAPI
 GdiplusStartup (ULONG_PTR *token, const GdiplusStartupInput *input, GdiplusStartupOutput *output)
 {
 	GpStatus status = Ok;
@@ -54,7 +55,7 @@ GdiplusStartup (ULONG_PTR *token, const GdiplusStartupInput *input, GdiplusStart
 }
 
 void 
-GdiplusShutdown (ULONG_PTR token)
+WINGDIPAPI GdiplusShutdown (ULONG_PTR token)
 {
 	if (startup) {
 		releaseCodecList ();
@@ -68,7 +69,7 @@ GdiplusShutdown (ULONG_PTR token)
 
 
 /* Memory */
-void *
+WINGDIPAPI void *
 GdipAlloc (size_t size)
 {
 	return malloc (size);
@@ -86,7 +87,7 @@ gdip_realloc (void *org, int size)
 	return realloc (org, size);
 }
 
-void 
+WINGDIPAPI void
 GdipFree (void *ptr)
 {
 	free (ptr);
@@ -123,7 +124,6 @@ float
 gdip_get_display_dpi ()
 {
 	static float dpis = 0;
-	Display* display;
 
 	if (dpis == 0) {
 #if __APPLE__
@@ -132,9 +132,10 @@ gdip_get_display_dpi ()
 
 		dpis = h_dpi;
 		return dpis;
-#else
+#elif HAS_X11 && CAIRO_HAS_XLIB_SURFACE
 		char *val;
 
+		Display* display;
 		display = XOpenDisplay (0);
 		/* If the display is openable lets try to read dpi from it; otherwise use a default of 96.0f */
 		if (display) {
@@ -148,6 +149,8 @@ gdip_get_display_dpi ()
 		} else {
 			dpis = 96.0f;
 		}
+#else
+		dpis = 96.0f;
 #endif
 	}
 

@@ -1053,20 +1053,18 @@ GdipCreateHICONFromBitmap (GpBitmap* bitmap, HICON *hbmReturn)
 	return GdipCloneImage ((GpImage *)bitmap, (GpImage**)hbmReturn);
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateBitmapFromResource (HINSTANCE hInstance, GDIPCONST WCHAR *lpBitmapName, GpBitmap** bitmap)
 {
 	return(NotImplemented);
 }
 
 /* coverity[+alloc : arg-*6] */
-GpStatus
-GdipCloneBitmapAreaI (int x, int y, int width, int height, PixelFormat format,
+GpStatus WINGDIPAPI
+GdipCloneBitmapAreaI (INT x, INT y, INT width, INT height, PixelFormat format,
 					  GpBitmap *original, GpBitmap **bitmap)
 {
 	GpBitmap	*result;
-	FrameData	*frame;
-	BitmapData	*bitmap_data;
 	Rect		sr = { x, y, width, height };
 	Rect		dr = { 0, 0, width, height };
 	GpStatus	status;
@@ -1092,7 +1090,12 @@ GdipCloneBitmapAreaI (int x, int y, int width, int height, PixelFormat format,
 	}
 
 	result->cairo_format = original->cairo_format;
-		
+
+	// Preserve the resolution values.  See https://bugzilla.xamarin.com/show_bug.cgi?id=44127.
+	result->active_bitmap->dpi_horz = original->active_bitmap->dpi_horz;
+	result->active_bitmap->dpi_vert = original->active_bitmap->dpi_vert;
+	result->active_bitmap->image_flags |= (original->active_bitmap->image_flags & ImageFlagsHasRealDPI);
+
 	*bitmap = result;
 	return Ok;
 
@@ -1102,8 +1105,8 @@ fail:
 }
 
 /* coverity[+alloc : arg-*6] */
-GpStatus
-GdipCloneBitmapArea (float x, float y, float w, float h, PixelFormat format,
+GpStatus WINGDIPAPI
+GdipCloneBitmapArea (REAL x, REAL y, REAL w, REAL h, PixelFormat format,
 					 GpBitmap *original, GpBitmap **bitmap)
 {
 	return GdipCloneBitmapAreaI ((int) x, (int) y, (int) w, (int) h, format,
@@ -1111,7 +1114,7 @@ GdipCloneBitmapArea (float x, float y, float w, float h, PixelFormat format,
 }
 
 static void
-gdip_copy_strides (void *dst, int dstStride, void *src, int srcStride, int realBytes, int height)
+gdip_copy_strides (BYTE *dst, int dstStride, BYTE *src, int srcStride, int realBytes, int height)
 {
 	int i;
 	for (i = 0; i < height; i++) {
@@ -1947,7 +1950,7 @@ gdip_make_alpha_opaque (BitmapData *data)
 }
 #endif
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipBitmapLockBits (GpBitmap *bitmap, GDIPCONST Rect *srcRect, UINT flags, PixelFormat format, BitmapData *locked_data)
 {
 	int		dest_pixel_format_bpp;
@@ -2052,7 +2055,7 @@ GdipBitmapLockBits (GpBitmap *bitmap, GDIPCONST Rect *srcRect, UINT flags, Pixel
 	return status;
 }
 
-GpStatus 
+GpStatus WINGDIPAPI
 GdipBitmapUnlockBits (GpBitmap *bitmap, BitmapData *locked_data)
 {
 	GpStatus	status;
@@ -2103,8 +2106,8 @@ GdipBitmapUnlockBits (GpBitmap *bitmap, BitmapData *locked_data)
 	return status;
 }
 
-GpStatus
-GdipBitmapSetPixel (GpBitmap *bitmap, int x, int y, ARGB color)
+GpStatus WINGDIPAPI
+GdipBitmapSetPixel (GpBitmap *bitmap, INT x, INT y, ARGB color)
 {
 	BitmapData *data;
 	BYTE *v;
@@ -2143,8 +2146,8 @@ GdipBitmapSetPixel (GpBitmap *bitmap, int x, int y, ARGB color)
 	return Ok;		
 }
 
-GpStatus
-GdipBitmapGetPixel (GpBitmap *bitmap, int x, int y, ARGB *color)
+GpStatus WINGDIPAPI
+GdipBitmapGetPixel (GpBitmap *bitmap, INT x, INT y, ARGB *color)
 {
 	BitmapData	*data;
 	
@@ -2202,8 +2205,8 @@ GdipBitmapGetPixel (GpBitmap *bitmap, int x, int y, ARGB *color)
 	return Ok;
 }
 
-GpStatus
-GdipBitmapSetResolution (GpBitmap *bitmap, float xdpi, float ydpi)
+GpStatus WINGDIPAPI
+GdipBitmapSetResolution (GpBitmap *bitmap, REAL xdpi, REAL ydpi)
 {
 	if (!bitmap || !bitmap->active_bitmap || isnan(xdpi) || isnan(xdpi) || (xdpi <= 0.0f) || (ydpi <= 0.0f))
 		return InvalidParameter;

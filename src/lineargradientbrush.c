@@ -23,6 +23,7 @@
  *
  */
 
+#include "brush-private.h"
 #include "lineargradientbrush-private.h"
 #include "graphics-private.h"
 #include "matrix-private.h"
@@ -442,7 +443,7 @@ gdip_linear_gradient_setup_initial_matrix (GpLineGradient *linear)
 }
 
 // coverity[+alloc : arg-*5]
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateLineBrushI (GDIPCONST GpPoint *point1, GDIPCONST GpPoint *point2, ARGB color1, ARGB color2, GpWrapMode wrapMode, GpLineGradient **lineGradient)
 {
 	GpPointF p1, p2;
@@ -459,7 +460,7 @@ GdipCreateLineBrushI (GDIPCONST GpPoint *point1, GDIPCONST GpPoint *point2, ARGB
 }
 
 // coverity[+alloc : arg-*5]
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateLineBrush (GDIPCONST GpPointF *point1, GDIPCONST GpPointF *point2, ARGB color1, ARGB color2, GpWrapMode wrapMode, GpLineGradient **lineGradient)
 {
 	GpLineGradient *linear;
@@ -550,7 +551,7 @@ get_angle_from_linear_gradient_mode (LinearGradientMode mode)
 }
 
 // coverity[+alloc : arg-*5]
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateLineBrushFromRectI (GDIPCONST GpRect *rect, ARGB color1, ARGB color2, LinearGradientMode mode, GpWrapMode wrapMode, GpLineGradient **lineGradient)
 {
 	GpRectF rectf;
@@ -569,7 +570,7 @@ GdipCreateLineBrushFromRectI (GDIPCONST GpRect *rect, ARGB color1, ARGB color2, 
 }
 
 // coverity[+alloc : arg-*5]
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateLineBrushFromRect (GDIPCONST GpRectF *rect, ARGB color1, ARGB color2, LinearGradientMode mode, GpWrapMode wrapMode, GpLineGradient **lineGradient)
 {
 	/* FIXME: Check whether angle has to be scalable or not in case of lineargradient mode. */
@@ -578,7 +579,7 @@ GdipCreateLineBrushFromRect (GDIPCONST GpRectF *rect, ARGB color1, ARGB color2, 
 }
 
 // coverity[+alloc : arg-*6]
-GpStatus
+GpStatus WINGDIPAPI
 GdipCreateLineBrushFromRectWithAngleI (GDIPCONST GpRect *rect, ARGB color1, ARGB color2, float angle, BOOL isAngleScalable, GpWrapMode wrapMode, GpLineGradient **lineGradient)
 {
 	GpRectF rectf;
@@ -625,7 +626,7 @@ GdipCreateLineBrushFromRectWithAngle (GDIPCONST GpRectF *rect, ARGB color1, ARGB
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineBlendCount (GpLineGradient *brush, int *count)
 {
 	if (!brush || !count)
@@ -643,7 +644,7 @@ GdipGetLineBlendCount (GpLineGradient *brush, int *count)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineBlend (GpLineGradient *brush, GDIPCONST float *blend, GDIPCONST float *positions, int count)
 {
 	float *blendFactors;
@@ -693,7 +694,7 @@ GdipSetLineBlend (GpLineGradient *brush, GDIPCONST float *blend, GDIPCONST float
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineBlend (GpLineGradient *brush, float *blend, float *positions, int count)
 {
 	if (!brush || !blend || !positions || (brush->blend->count != count))
@@ -712,7 +713,7 @@ GdipGetLineBlend (GpLineGradient *brush, float *blend, float *positions, int cou
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineGammaCorrection (GpLineGradient *brush, BOOL useGammaCorrection)
 {
 	if (!brush)
@@ -724,7 +725,7 @@ GdipSetLineGammaCorrection (GpLineGradient *brush, BOOL useGammaCorrection)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineGammaCorrection (GpLineGradient *brush, BOOL *useGammaCorrection)
 {
 	if (!brush || !useGammaCorrection)
@@ -735,7 +736,7 @@ GdipGetLineGammaCorrection (GpLineGradient *brush, BOOL *useGammaCorrection)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLinePresetBlendCount (GpLineGradient *brush, int *count)
 {
 	if (!brush || !count)
@@ -752,7 +753,7 @@ GdipGetLinePresetBlendCount (GpLineGradient *brush, int *count)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLinePresetBlend (GpLineGradient *brush, GDIPCONST ARGB *blend, GDIPCONST float *positions, int count)
 {
 	ARGB *blendColors;
@@ -801,7 +802,7 @@ GdipSetLinePresetBlend (GpLineGradient *brush, GDIPCONST ARGB *blend, GDIPCONST 
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLinePresetBlend (GpLineGradient *brush, ARGB *blend, float *positions, int count)
 {
 	if (!brush || !blend || !positions || (brush->presetColors->count != count))
@@ -819,7 +820,7 @@ GdipGetLinePresetBlend (GpLineGradient *brush, ARGB *blend, float *positions, in
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineColors (GpLineGradient *brush, ARGB color1, ARGB color2)
 {
 	if (!brush)
@@ -831,7 +832,7 @@ GdipSetLineColors (GpLineGradient *brush, ARGB color1, ARGB color2)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineColors (GpLineGradient *brush, ARGB *colors)
 {
 	if (!brush || !colors)
@@ -843,7 +844,7 @@ GdipGetLineColors (GpLineGradient *brush, ARGB *colors)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineRectI (GpLineGradient *brush, GpRect *rect)
 {
 	if (!brush || !rect)
@@ -857,7 +858,7 @@ GdipGetLineRectI (GpLineGradient *brush, GpRect *rect)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineRect (GpLineGradient *brush, GpRectF *rect)
 {
 	if (!brush || !rect)
@@ -868,7 +869,7 @@ GdipGetLineRect (GpLineGradient *brush, GpRectF *rect)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineTransform (GpLineGradient *brush, GpMatrix *matrix)
 {
 	if (!brush || !matrix)
@@ -879,7 +880,7 @@ GdipGetLineTransform (GpLineGradient *brush, GpMatrix *matrix)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineTransform (GpLineGradient *brush, GDIPCONST GpMatrix *matrix)
 {
 	GpStatus status;
@@ -898,7 +899,7 @@ GdipSetLineTransform (GpLineGradient *brush, GDIPCONST GpMatrix *matrix)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipGetLineWrapMode (GpLineGradient *brush, GpWrapMode *wrapMode)
 {
 	if (!brush || !wrapMode)
@@ -908,7 +909,7 @@ GdipGetLineWrapMode (GpLineGradient *brush, GpWrapMode *wrapMode)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineWrapMode (GpLineGradient *brush, GpWrapMode wrapMode)
 {
 	if (!brush || (wrapMode == WrapModeClamp))
@@ -919,7 +920,7 @@ GdipSetLineWrapMode (GpLineGradient *brush, GpWrapMode wrapMode)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineLinearBlend (GpLineGradient *brush, float focus, float scale)
 {
 	float *blends;
@@ -991,7 +992,7 @@ GdipSetLineLinearBlend (GpLineGradient *brush, float focus, float scale)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipSetLineSigmaBlend (GpLineGradient *brush, float focus, float scale)
 {
 	float *blends;
@@ -1173,7 +1174,7 @@ GdipSetLineSigmaBlend (GpLineGradient *brush, float focus, float scale)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipMultiplyLineTransform (GpLineGradient *brush, GpMatrix *matrix, GpMatrixOrder order)
 {
 	GpStatus status;
@@ -1197,7 +1198,7 @@ GdipMultiplyLineTransform (GpLineGradient *brush, GpMatrix *matrix, GpMatrixOrde
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipResetLineTransform (GpLineGradient *brush)
 {
 	if (!brush)
@@ -1209,7 +1210,7 @@ GdipResetLineTransform (GpLineGradient *brush)
 	return Ok;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipRotateLineTransform (GpLineGradient *brush, float angle, GpMatrixOrder order)
 {
 	GpStatus status;
@@ -1222,7 +1223,7 @@ GdipRotateLineTransform (GpLineGradient *brush, float angle, GpMatrixOrder order
 	return status;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipScaleLineTransform (GpLineGradient *brush, float sx, float sy, GpMatrixOrder order)
 {
 	GpStatus status;
@@ -1235,7 +1236,7 @@ GdipScaleLineTransform (GpLineGradient *brush, float sx, float sy, GpMatrixOrder
 	return status;
 }
 
-GpStatus
+GpStatus WINGDIPAPI
 GdipTranslateLineTransform (GpLineGradient *brush, float dx, float dy, GpMatrixOrder order)
 {
 	GpStatus status;
