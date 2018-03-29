@@ -1,3 +1,14 @@
+libgdiplus (5.6-0xamarin3) preview; urgency=medium
+
+  [ Xamarin Public Jenkins (auto-signing) ]
+  * Packaging bugfix:
+
+  [ Ubuntu ]
+  * [461294c] Disable tests a different way [4dda76e] Revert "Disable
+    tests"
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 29 Mar 2018 13:41:39 +0000
+
 libgdiplus (5.6-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
