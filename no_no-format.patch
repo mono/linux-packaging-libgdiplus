@@ -1,0 +1,10 @@
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 4878b4a..e69e1c2 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -121,4 +121,4 @@ libgdiplus_la_SOURCES = \
+ 
+ libgdiplus_la_LIBADD = $(GDIPLUS_LIBS)
+ 
+-INCLUDES = $(GDIPLUS_CFLAGS) -Wall -Wno-unused -Wno-format
++INCLUDES = $(GDIPLUS_CFLAGS) -Wall -Wno-unused
