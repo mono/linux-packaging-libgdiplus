@@ -69,6 +69,8 @@ Group:          Development/Libraries/C and C++
 Requires:       libgdiplus0 = %{version}
 Provides:       pkgconfig(libgdiplus)
 
+%define debug_package %{nil}
+
 %description -n libgdiplus-devel
 This library is part of the Mono project. It is required when
 using System.Drawing.
