@@ -1,3 +1,14 @@
+libgdiplus (6.0-0xamarin3) preview; urgency=medium
+
+  [ Xamarin Public Jenkins (auto-signing) ]
+  * Packaging bugfix:
+
+  [ Ubuntu ]
+  * [ae9323c] Delete obsolete configure flag [56d81f2] Require pango (it
+    will be used where new enough)
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 02 Aug 2019 18:01:34 +0000
+
 libgdiplus (6.0-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
