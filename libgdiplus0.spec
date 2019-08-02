@@ -46,6 +46,7 @@ BuildRequires:  freetype-devel
 BuildRequires:  freetype2-devel
 %endif
 BuildRequires:  giflib-devel
+BuildRequires:  pango-devel
 BuildRequires:  glib2-devel
 BuildRequires:  libexif-devel
 BuildRequires:  libjpeg-devel
