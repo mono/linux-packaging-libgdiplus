@@ -17,6 +17,7 @@ Build-Depends:
  libgif-dev, 
  libexif-dev, 
  libcairo2-dev (>= 1.4),
+ libpango1.0-dev,
  dh-autoreconf
 Standards-Version: 3.9.1
 Homepage: http://www.mono-project.com/Libgdiplus
