@@ -23,7 +23,6 @@ Version:	6.0
 Release:	0.xamarin.3
 Url:            http://go-mono.org/
 Source0:        http://download.mono-project.com/sources/%{real_name}/%{name}-%{version}.tar.gz
-Patch0:		0001-Revert-configure.ac-Fix-automake-suggestion-about-AC.patch
 Summary:        Open Source Implementation of the GDI+ API
 License:        (LGPL-2.1+ or MPL-1.1) and MIT
 Group:          Development/Libraries/Other
@@ -79,7 +78,6 @@ using System.Drawing.
 
 %prep
 %setup -q -n %{real_name}-%{version}
-%patch0 -p1
 
 %build
 autoreconf -fiv
