@@ -28,10 +28,9 @@
  * Copyright (C) Novell, Inc. 2003-2004.
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-#include "gdiplus-private.h"
+#include "config.h"
+#include "codecs-private.h"
+#include "tiffcodec.h"
 
 GUID gdip_tif_image_format_guid = {0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e}};
 
@@ -44,8 +43,6 @@ GUID gdip_tif_image_format_guid = {0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0
 #include <byteswap.h>
 #endif
 
-#include "tiffcodec.h"
-
 #ifndef TIFFTAG_EXIFIFD
 #define	TIFFTAG_EXIFIFD	34665
 #endif
@@ -53,10 +50,9 @@ GUID gdip_tif_image_format_guid = {0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0
 
 /* Codecinfo related data*/
 static ImageCodecInfo tiff_codec;
-static const WCHAR tiff_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'T', 'I', 'F', 'F',
-        0}; /* Built-in TIFF */
+static const WCHAR tiff_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'T', 'I', 'F', 'F', ' ', 'C', 'o', 'd', 'e', 'c', 0}; /* Built-in TIFF Codec */
 static const WCHAR tiff_extension[] = {'*', '.', 'T', 'I', 'F',';', '*', '.', 'T', 'I', 'F','F', 0}; /* *.TIF;*.TIFF */
-static const WCHAR tiff_mimetype[] = {'i', 'm', 'a','g', 'e', '/', 't', 'i', 'f', 'f', 0}; /* image/gif */
+static const WCHAR tiff_mimetype[] = {'i', 'm', 'a','g', 'e', '/', 't', 'i', 'f', 'f', 0}; /* image/tiff */
 static const WCHAR tiff_format[] = {'T', 'I', 'F', 'F', 0}; /* TIFF */
 static const BYTE tiff_sig_pattern[] = { 0x49, 0x49, 0x4D, 0x4D };
 static const BYTE tiff_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -65,22 +61,16 @@ static const BYTE tiff_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
 System.Drawing Namespace*/
 typedef struct {
 	GetBytesDelegate getBytesFunc;
-        PutBytesDelegate putBytesFunc;
+	PutBytesDelegate putBytesFunc;
 	SeekDelegate seekFunc;
-        CloseDelegate closeFunc;
-        SizeDelegate sizeFunc;
+	CloseDelegate closeFunc;
+	SizeDelegate sizeFunc;
 } gdip_tiff_clientData;
 
 static tsize_t 
 gdip_tiff_fileread (thandle_t clientData, tdata_t buffer, tsize_t size)
 {
 	return (tsize_t)fread(buffer, 1, size, (FILE*)clientData);
-}
-
-static tsize_t 
-gdip_tiff_fileread_none (thandle_t clientData, tdata_t buffer, tsize_t size)
-{
-	return 0;
 }
 
 static tsize_t 
@@ -202,13 +192,12 @@ gdip_getcodecinfo_tiff ()
 }
 
 static GpStatus
-gdip_load_tiff_properties (TIFF *tiff, BitmapData *bitmap_data)
+gdip_load_tiff_properties (TIFF *tiff, ActiveBitmapData *bitmap_data)
 {
 	BYTE *text;
 	uint32	i;
 	uint16	s;
 	uint16	s2;
-	char	c;
 	double	d;
 	float	f;
 	uint16	samples_per_pixel;
@@ -553,8 +542,8 @@ gdip_load_tiff_properties (TIFF *tiff, BitmapData *bitmap_data)
 		uint16	*sample;
 
 		if (TIFFGetField(tiff, TIFFTAG_TRANSFERFUNCTION, &sample)) {
-			gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFunction, 
-				(1 << bits_per_sample) * sizeof(uint16), PropertyTagTypeShort, sample);
+			gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFuncition, 
+				(1 << bits_per_sample) * (ULONG) sizeof(uint16), PropertyTagTypeShort, sample);
 		}
 	} else if (samples_per_pixel == 3) {
 		uint16	*r;
@@ -574,7 +563,7 @@ gdip_load_tiff_properties (TIFF *tiff, BitmapData *bitmap_data)
 					ptr[i + 1] = g[i];
 					ptr[i + 2] = b[i];
 				}
-				gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFunction, 
+				gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFuncition, 
 					3 * (1 << samples_per_pixel) * sizeof(uint16), PropertyTagTypeShort, buffer);
 				GdipFree(buffer);
 			}
@@ -598,7 +587,7 @@ gdip_load_tiff_properties (TIFF *tiff, BitmapData *bitmap_data)
 				ptr[2] = whitepoints[1] * 1000000;
 				ptr[3] = 1000000;
 
-				gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFunction, 
+				gdip_bitmapdata_property_add (bitmap_data, PropertyTagTransferFuncition, 
 					2 * (sizeof(uint32) + sizeof(uint32)), PropertyTagTypeRational, buffer);
 				GdipFree(buffer);
 			}
@@ -672,10 +661,9 @@ gdip_load_tiff_properties (TIFF *tiff, BitmapData *bitmap_data)
 }
 
 static GpStatus
-gdip_save_tiff_properties (TIFF *tiff, BitmapData *bitmap_data, int samples_per_pixel, int bits_per_sample)
+gdip_save_tiff_properties (TIFF *tiff, ActiveBitmapData *bitmap_data, int samples_per_pixel, int bits_per_sample)
 {
 	int		index;
-	BYTE *text;
 	guint32		i;
 	guint32		l;
 	int		j;
@@ -867,18 +855,18 @@ gdip_save_tiff_properties (TIFF *tiff, BitmapData *bitmap_data, int samples_per_
 
 
 	if (samples_per_pixel == 1) {
-		if (gdip_bitmapdata_property_find_id(bitmap_data, PropertyTagTransferFunction, &index) == Ok) {
+		if (gdip_bitmapdata_property_find_id(bitmap_data, PropertyTagTransferFuncition, &index) == Ok) {
 			TIFFSetField(tiff, TIFFTAG_TRANSFERFUNCTION, bitmap_data->property[index].value);
 		}
 	} else if (samples_per_pixel == 3) {
-		if (gdip_bitmapdata_property_find_id(bitmap_data, PropertyTagTransferFunction, &index) == Ok) {
+		if (gdip_bitmapdata_property_find_id(bitmap_data, PropertyTagTransferFuncition, &index) == Ok) {
 			uint16	*rmap;
 			uint16	*gmap;
 			uint16	*bmap;
 
-			rmap = GdipAlloc((1 << samples_per_pixel) *  sizeof(uint16));
-			gmap = GdipAlloc((1 << samples_per_pixel) *  sizeof(uint16));
-			bmap = GdipAlloc( (1 << samples_per_pixel) *  sizeof(uint16));
+			rmap = GdipAlloc ((1 << samples_per_pixel) * (ULONG) sizeof (uint16));
+			gmap = GdipAlloc ((1 << samples_per_pixel) * (ULONG) sizeof (uint16));
+			bmap = GdipAlloc ((1 << samples_per_pixel) * (ULONG) sizeof (uint16));
 
 			if ((rmap != NULL) && (gmap != NULL) && (bmap != NULL)) {
 				for (j = 0; j < 1 << bits_per_sample; j++) {
@@ -967,10 +955,11 @@ gdip_save_tiff_image (TIFF* tiff, GpImage *image, GDIPCONST EncoderParameters *p
 	int		i;
 	int		num_of_pages;
 	int		page;
-	BitmapData	*bitmap_data;
+	ActiveBitmapData	*bitmap_data;
 	BYTE		*pixbuf;
 	int		samples_per_pixel;
 	int		bits_per_sample;
+	unsigned long long int size;
 
 	if (tiff == NULL) {
 		return InvalidParameter;
@@ -1017,10 +1006,15 @@ gdip_save_tiff_image (TIFF* tiff, GpImage *image, GDIPCONST EncoderParameters *p
 			TIFFSetField (tiff, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
 			TIFFSetField (tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
 			TIFFSetField (tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-    			TIFFSetField (tiff, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize (tiff, bitmap_data->stride));
+			TIFFSetField (tiff, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize (tiff, bitmap_data->stride));
 			TIFFSetField (tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 
-			pixbuf = GdipAlloc (bitmap_data->width * samples_per_pixel);
+			size = (unsigned long long int)bitmap_data->width * samples_per_pixel;
+			if (size > G_MAXINT32) {
+				goto error;
+			}
+
+			pixbuf = GdipAlloc (size);
 			if (pixbuf == NULL) {
 				goto error;
 			}
@@ -1081,8 +1075,7 @@ gdip_load_tiff_image (TIFF *tiff, GpImage **image)
 	int		page;
 	TIFFRGBAImage	tiff_image;
 	FrameData	*frame;
-	BitmapData	*bitmap_data;
-	size_t		num_of_pixels;
+	ActiveBitmapData	*bitmap_data;
 	char		*pixbuf;
 	char		*pixbuf_row;
 	guint32		*pixbuf_ptr;
@@ -1092,20 +1085,29 @@ gdip_load_tiff_image (TIFF *tiff, GpImage **image)
 	if (tiff == NULL) {
 		*image = NULL;
 		/* we cannot call TIFFClose(tiff); with a NULL value since it will crash - bnc #569940 */
-		return InvalidParameter;
+		return OutOfMemory;
 	}
 
+	result = NULL;
 	pixbuf_row = NULL;
 	pixbuf = NULL;
+	memset (&tiff_image, 0, sizeof (TIFFRGBAImage));
 
 	num_of_pages = TIFFNumberOfDirectories(tiff);
 
+	/* Handle cases where there are too many directories or there is a infinite loop in the directory structure.
+	 * This relies on libtiff returning 65535 in the error case, which has been the case since v4.0.4 released in 2015. */
+	if (num_of_pages >= 65535)
+		goto error;
+
 	result = gdip_bitmap_new();
 	if (!result)
-		return OutOfMemory;
+		goto error;
 
 	result->type = ImageTypeBitmap;
 	frame = gdip_frame_add(result, &gdip_image_frameDimension_page_guid);
+	if (!frame)
+		goto error;
 
 	for (page = 0; page < num_of_pages; page++) {
 		unsigned long long int size;
@@ -1121,8 +1123,7 @@ gdip_load_tiff_image (TIFF *tiff, GpImage **image)
 
 		gdip_load_tiff_properties(tiff, bitmap_data);
 
-		if (!TIFFRGBAImageBegin(&tiff_image, tiff, 0, error_message)) {
-			/* Can we use the error message somewhere? */
+		if (!TIFFRGBAImageBegin (&tiff_image, tiff, 0, error_message)) {
 			goto error;
 		}
 
@@ -1137,13 +1138,18 @@ gdip_load_tiff_image (TIFF *tiff, GpImage **image)
 
 		if (TIFFGetField(tiff, TIFFTAG_XRESOLUTION, &dpi)) {
 			bitmap_data->dpi_horz = dpi;
-			bitmap_data->image_flags |= ImageFlagsHasRealDPI;
+		} else {
+			bitmap_data->dpi_horz = 0;
 		}
 
 		if (TIFFGetField(tiff, TIFFTAG_YRESOLUTION, &dpi)) {
 			bitmap_data->dpi_vert = dpi;
-			bitmap_data->image_flags |= ImageFlagsHasRealDPI;
+		} else {
+			bitmap_data->dpi_vert = 0;
 		}
+
+		if (bitmap_data->dpi_horz && bitmap_data->dpi_vert)
+			bitmap_data->image_flags |= ImageFlagsHasRealDPI;
 
 		/* width and height are uint32, but TIFF uses 32 bits offsets (so it's real size limit is 4GB),
 		 * however libtiff uses signed int (int32 not uint32) as offsets so we limit ourselves to 2GB */
@@ -1255,11 +1261,11 @@ gdip_save_tiff_image_to_file (BYTE *filename, GpImage *image, GDIPCONST EncoderP
 
 GpStatus
 gdip_load_tiff_image_from_stream_delegate (GetBytesDelegate getBytesFunc,
-                                           PutBytesDelegate putBytesFunc,
-                                           SeekDelegate seekFunc,
-					   CloseDelegate closeFunc,
-					   SizeDelegate sizeFunc,
-                                           GpImage **image)
+					PutBytesDelegate putBytesFunc,
+					SeekDelegate seekFunc,
+					CloseDelegate closeFunc,
+					SizeDelegate sizeFunc,
+					GpImage **image)
 {
 	TIFF *tif = NULL;
 	gdip_tiff_clientData clientData;
@@ -1279,12 +1285,12 @@ gdip_load_tiff_image_from_stream_delegate (GetBytesDelegate getBytesFunc,
 
 GpStatus
 gdip_save_tiff_image_to_stream_delegate (GetBytesDelegate getBytesFunc,
-					 PutBytesDelegate putBytesFunc,
-                                         SeekDelegate seekFunc,
-					 CloseDelegate closeFunc,
-					 SizeDelegate sizeFunc,
-                                         GpImage *image,
-                                         GDIPCONST EncoderParameters *params)
+					PutBytesDelegate putBytesFunc,
+					SeekDelegate seekFunc,
+					CloseDelegate closeFunc,
+					SizeDelegate sizeFunc,
+					GpImage *image,
+					GDIPCONST EncoderParameters *params)
 {
 	TIFF* tiff;
 	gdip_tiff_clientData clientData;
@@ -1325,11 +1331,11 @@ gdip_load_tiff_image_from_file (FILE *fp, GpImage **image)
 
 GpStatus
 gdip_load_tiff_image_from_stream_delegate (GetBytesDelegate getBytesFunc,
-                                           PutBytesDelegate putBytesFunc,
-                                           SeekDelegate seekFunc,
-					   CloseDelegate closeFunc,
-					   SizeDelegate sizeFunc,
-                                           GpImage **image)
+					PutBytesDelegate putBytesFunc,
+					SeekDelegate seekFunc,
+					CloseDelegate closeFunc,
+					SizeDelegate sizeFunc,
+					GpImage **image)
 {
 	*image = NULL;
 	return UnknownImageFormat;
@@ -1343,13 +1349,58 @@ gdip_save_tiff_image_to_file (BYTE *filename, GpImage *image, GDIPCONST EncoderP
 
 GpStatus
 gdip_save_tiff_image_to_stream_delegate (GetBytesDelegate getBytesFunc,
-					 PutBytesDelegate putBytesFunc,
-                                         SeekDelegate seekFunc,
-					 CloseDelegate closeFunc,
-					 SizeDelegate sizeFunc,
-                                         GpImage *image,
-                                         GDIPCONST EncoderParameters *params)
+					PutBytesDelegate putBytesFunc,
+					SeekDelegate seekFunc,
+					CloseDelegate closeFunc,
+					SizeDelegate sizeFunc,
+					GpImage *image,
+					GDIPCONST EncoderParameters *params)
 {
     return UnknownImageFormat;
 }
 #endif
+
+GpStatus
+gdip_fill_encoder_parameter_list_tiff (EncoderParameters *buffer, UINT size)
+{
+	TiffEncoderParameters *tiffBuffer = (TiffEncoderParameters *) buffer;
+
+	if (!buffer || size != sizeof (TiffEncoderParameters))
+		return InvalidParameter;
+
+	tiffBuffer->count = 4;
+
+	tiffBuffer->compression.Guid = GdipEncoderCompression;
+	tiffBuffer->compression.NumberOfValues = 5;
+	tiffBuffer->compression.Type = EncoderParameterValueTypeLong;
+	tiffBuffer->compressionData[0] = EncoderValueCompressionLZW;
+	tiffBuffer->compressionData[1] = EncoderValueCompressionCCITT3;
+	tiffBuffer->compressionData[2] = EncoderValueCompressionRle;
+	tiffBuffer->compressionData[3] = EncoderValueCompressionCCITT4;
+	tiffBuffer->compressionData[4] = EncoderValueCompressionNone;
+	tiffBuffer->compression.Value = &tiffBuffer->compressionData;
+
+	tiffBuffer->colorDepth.Guid = GdipEncoderColorDepth;
+	tiffBuffer->colorDepth.NumberOfValues = 5;
+	tiffBuffer->colorDepth.Type = EncoderParameterValueTypeLong;
+	tiffBuffer->colorDepthData[0] = 1;
+	tiffBuffer->colorDepthData[1] = 4;
+	tiffBuffer->colorDepthData[2] = 8;
+	tiffBuffer->colorDepthData[3] = 24;
+	tiffBuffer->colorDepthData[4] = 32;
+	tiffBuffer->colorDepth.Value = &tiffBuffer->colorDepthData;
+
+	tiffBuffer->saveFlag.Guid = GdipEncoderSaveFlag;
+	tiffBuffer->saveFlag.NumberOfValues = 1;
+	tiffBuffer->saveFlag.Type = EncoderParameterValueTypeLong;
+	tiffBuffer->saveFlagValue = EncoderValueMultiFrame;
+	tiffBuffer->saveFlag.Value = &tiffBuffer->saveFlagValue;
+
+	tiffBuffer->saveAsCYMK.Guid = GdipEncoderSaveAsCMYK;
+	tiffBuffer->saveAsCYMK.NumberOfValues = 1;
+	tiffBuffer->saveAsCYMK.Type = EncoderParameterValueTypeLong;
+	tiffBuffer->saveAsCYMKValue = 1;
+	tiffBuffer->saveAsCYMK.Value = &tiffBuffer->saveAsCYMKValue;
+
+	return Ok;
+}

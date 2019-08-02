@@ -45,25 +45,38 @@
 #define REGION_INFINITE_LENGTH		8388608
 
 typedef enum {
-        RegionTypeEmpty = 0,
-        RegionTypeRect  = 1,
-        RegionTypeRectF = 2,
-        RegionTypePath  = 3
+    RegionTypeRect,
+    RegionTypePath,
+    RegionTypeInfinite
 } RegionType;
 
+typedef enum {
+    RegionDataRect          = 0x10000000,
+    RegionDataPath          = 0x10000001,
+    RegionDataEmptyRect     = 0x10000002,
+    RegionDataInfiniteRect  = 0x10000003
+} RegionDataType;
+
+typedef struct {
+    DWORD size;
+    DWORD checksum;
+    DWORD magic;
+    DWORD combiningOps;
+} RegionHeader;
+
 struct _Region {
-	guint32		type;
-        int		cnt;
-        GpRectF*	rects;
-	GpPathTree*	tree;
-	GpRegionBitmap*	bitmap;
+    guint32		type;
+    int		cnt;
+    GpRectF*	rects;
+    GpPathTree*	tree;
+    GpRegionBitmap*	bitmap;
 };
 
-BOOL gdip_is_InfiniteRegion (GpRegion *region) GDIP_INTERNAL;
+BOOL gdip_is_InfiniteRegion (const GpRegion *region) GDIP_INTERNAL;
 BOOL gdip_is_Point_in_RectF_inclusive (float x, float y, GpRectF* rect) GDIP_INTERNAL;
 
 void gdip_clear_region (GpRegion *region) GDIP_INTERNAL;
-void gdip_copy_region (GpRegion *source, GpRegion *dest) GDIP_INTERNAL;
+GpStatus gdip_copy_region (GpRegion *source, GpRegion *dest) GDIP_INTERNAL;
 
 #include "region.h"
 

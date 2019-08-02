@@ -52,7 +52,7 @@ GUID gdip_emf_image_format_guid = {0xb96b3cacU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0
 
 /* Codecinfo related data*/
 static ImageCodecInfo emf_codec;
-static const WCHAR emf_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'E', 'M', 'F', 0}; /* Built-in EMF */
+static const WCHAR emf_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'E', 'M', 'F', ' ', 'C', 'o', 'd', 'e', 'c', 0}; /* Built-in EMF Codec */
 static const WCHAR emf_extension[] = {'*','.','E', 'M', 'F', 0}; /* *.EMF */
 static const WCHAR emf_mimetype[] = {'i', 'm', 'a','g', 'e', '/', 'x', '-', 'e', 'm', 'f', 0}; /* image/x-emf */
 static const WCHAR emf_format[] = {'E', 'M', 'F', 0}; /* EMF */
@@ -137,6 +137,8 @@ PolyBezier (MetafilePlayContext *context, BYTE *data, int len, BOOL compact)
 #ifdef DEBUG_EMF
 	printf ("PolyBezier%s bounds [%d, %d, %d, %d] with %d points", (compact ? "16" : ""), 
 		bounds.left, bounds.top, bounds.right, bounds.bottom, num);
+#else
+	(void) bounds; // Avoid an unused variable warning.
 #endif
 
 	/* we need to supply the current x,y position */
@@ -215,6 +217,8 @@ Polygon (MetafilePlayContext *context, BYTE *data, int len, BOOL compact)
 #ifdef DEBUG_EMF
 	printf ("Polygon%s bounds [%d, %d, %d, %d] with %d points", (compact ? "16" : ""), 
 		bounds.left, bounds.top, bounds.right, bounds.bottom, num);
+#else
+	(void) bounds; // Avoid an unused variable warning.
 #endif
 
 	points = (GpPointF*) GdipAlloc (num * sizeof (GpPointF));
@@ -266,20 +270,35 @@ PolyPolygon (MetafilePlayContext *context, BYTE *data, BOOL compact)
 	n++;
 
 	/* total number of points (in all polygons)*/
-	int total = GETDW(DWP(n));
+	// int total = GETDW(DWP(n));
 	n++;
-	int i;
+	int i, j;
 	PointFList *list = GdipAlloc (poly_num * sizeof (PointFList));
+	if (!list)
+		return OutOfMemory;
+
 	PointFList *current = list;
 #ifdef DEBUG_EMF
 	printf ("PolyPolygon%s bounds [%d, %d, %d, %d] with %d polygons", (compact ? "16" : ""), 
 		bounds.left, bounds.top, bounds.right, bounds.bottom, poly_num);
+#else
+	(void) bounds; // Avoid an unused variable warning.
 #endif
+
 	/* read size of each polygon and allocate the required memory */
 	for (i = 0; i < poly_num; i++) {
 		current->num = GETDW(DWP(n));
 		n++;
 		current->points = (GpPointF*) GdipAlloc (current->num * sizeof (GpPointF));
+		if (!current->points) {
+			for (j = 0; j < i; j++) {
+				GdipFree (list[j].points);
+			}
+
+			GdipFree (list);
+			return OutOfMemory;
+		}
+
 #ifdef DEBUG_EMF_2
 		printf ("\n\tSub Polygon #%d has %d points", i, current->num);
 #endif
@@ -319,13 +338,6 @@ PolyPolygon (MetafilePlayContext *context, BYTE *data, BOOL compact)
 	/* all points were freed, after being drawn, so we just have to free the polygon list*/
 	GdipFree (list);
 	return status;
-}
-
-static GpStatus
-EndOfFile (MetafilePlayContext *context, DWORD value, BYTE* data)
-{
-	/* TODO - process extra stuff if any */
-	return Ok;
 }
 
 /* http://wvware.sourceforge.net/caolan/ora-wmf.html */
@@ -404,7 +416,6 @@ gdip_metafile_play_emf (MetafilePlayContext *context)
 {
 	GpStatus status = Ok;
 	GpMetafile *metafile = context->metafile;
-	GpGraphics *graphics = context->graphics;
 	BYTE *data = metafile->data;
 	BYTE *end = data + metafile->length;
 #ifdef DEBUG_EMF
@@ -620,9 +631,6 @@ gdip_metafile_play_emf (MetafilePlayContext *context)
 		data += size;
 	}
 cleanup:
-	return status;
-end_of_record:
-	/* TODO : process extra stuff residing after the records */
 	return status;
 }
 

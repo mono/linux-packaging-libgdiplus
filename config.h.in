@@ -3,14 +3,14 @@
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
 
+/* AIX or PASE */
+#undef AIX
+
 /* OpenBSD */
 #undef BSDOS
 
 /* Win32 */
 #undef CYGWIN
-
-/* Skip X11 support */
-#undef HAS_X11
 
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
@@ -78,6 +78,9 @@
 /* Support for the visibility ("hidden") attribute */
 #undef HAVE_VISIBILITY_HIDDEN
 
+/* Define if x11 is available. */
+#undef HAVE_X11
+
 /* Linux */
 #undef LINUX
 
@@ -117,7 +120,7 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Use Pango to measure and draw text (INCOMPLETE and UNSUPPORTED) */
+/* Use Pango to measure and draw text */
 #undef USE_PANGO_RENDERING
 
 /* Version number of package */

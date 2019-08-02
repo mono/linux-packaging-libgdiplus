@@ -89,20 +89,46 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@HAS_X11_FALSE@noinst_PROGRAMS = testbits$(EXEEXT) testclip$(EXEEXT) \
-@HAS_X11_FALSE@	testfont$(EXEEXT) testgraphics$(EXEEXT) \
-@HAS_X11_FALSE@	testreversepath$(EXEEXT) testpen$(EXEEXT) \
-@HAS_X11_FALSE@	testpng$(EXEEXT)
-@HAS_X11_TRUE@noinst_PROGRAMS = testbits$(EXEEXT) testclip$(EXEEXT) \
-@HAS_X11_TRUE@	testfont$(EXEEXT) testgraphics$(EXEEXT) \
-@HAS_X11_TRUE@	testreversepath$(EXEEXT) testpen$(EXEEXT) \
-@HAS_X11_TRUE@	testpng$(EXEEXT)
-TESTS = testbits$(EXEEXT) testclip$(EXEEXT) testfont$(EXEEXT) \
-	testgraphics$(EXEEXT) testreversepath$(EXEEXT) \
-	testpen$(EXEEXT) testpng$(EXEEXT)
+noinst_PROGRAMS = testadjustablearrowcap$(EXEEXT) testbitmap$(EXEEXT) \
+	testbits$(EXEEXT) testbmpcodec$(EXEEXT) testbrush$(EXEEXT) \
+	testclip$(EXEEXT) testcodecs$(EXEEXT) \
+	testcustomlinecap$(EXEEXT) testemfcodec$(EXEEXT) \
+	testfont$(EXEEXT) testgeneral$(EXEEXT) testgifcodec$(EXEEXT) \
+	testgpimage$(EXEEXT) testgraphics$(EXEEXT) \
+	testgraphicsdraw$(EXEEXT) testgraphicsfill$(EXEEXT) \
+	testgraphicspath$(EXEEXT) testhatchbrush$(EXEEXT) \
+	testicocodec$(EXEEXT) testimageattributes$(EXEEXT) \
+	testjpegcodec$(EXEEXT) testlineargradientbrush$(EXEEXT) \
+	testmatrix$(EXEEXT) testmetafile$(EXEEXT) \
+	testpathgradientbrush$(EXEEXT) testpen$(EXEEXT) \
+	testpng$(EXEEXT) testpngcodec$(EXEEXT) testregion$(EXEEXT) \
+	testreversepath$(EXEEXT) testsolidbrush$(EXEEXT) \
+	teststringformat$(EXEEXT) testtext$(EXEEXT) \
+	testtexturebrush$(EXEEXT) testtiffcodec$(EXEEXT) \
+	testwmfcodec$(EXEEXT) $(am__EXEEXT_1)
+@HAVE_X11_TRUE@am__append_1 = testgdi
+TESTS = testadjustablearrowcap$(EXEEXT) testbitmap$(EXEEXT) \
+	testbits$(EXEEXT) testbmpcodec$(EXEEXT) testbrush$(EXEEXT) \
+	testclip$(EXEEXT) testcodecs$(EXEEXT) \
+	testcustomlinecap$(EXEEXT) testemfcodec$(EXEEXT) \
+	testfont$(EXEEXT) testgifcodec$(EXEEXT) testgeneral$(EXEEXT) \
+	testgpimage$(EXEEXT) testgraphics$(EXEEXT) \
+	testgraphicsdraw$(EXEEXT) testgraphicsfill$(EXEEXT) \
+	testgraphicspath$(EXEEXT) testhatchbrush$(EXEEXT) \
+	testicocodec$(EXEEXT) testimageattributes$(EXEEXT) \
+	testjpegcodec$(EXEEXT) testlineargradientbrush$(EXEEXT) \
+	testmatrix$(EXEEXT) testmetafile$(EXEEXT) \
+	testpathgradientbrush$(EXEEXT) testpen$(EXEEXT) \
+	testpng$(EXEEXT) testpngcodec$(EXEEXT) testregion$(EXEEXT) \
+	testreversepath$(EXEEXT) testsolidbrush$(EXEEXT) \
+	teststringformat$(EXEEXT) testtexturebrush$(EXEEXT) \
+	testtext$(EXEEXT) testtiffcodec$(EXEEXT) testwmfcodec$(EXEEXT)
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -110,26 +136,90 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@HAVE_X11_TRUE@am__EXEEXT_1 = testgdi$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
-am_testbits_OBJECTS = testbits.$(OBJEXT)
-testbits_OBJECTS = $(am_testbits_OBJECTS)
+am_testadjustablearrowcap_OBJECTS = testadjustablearrowcap.$(OBJEXT)
+testadjustablearrowcap_OBJECTS = $(am_testadjustablearrowcap_OBJECTS)
 am__DEPENDENCIES_1 = $(top_builddir)/src/libgdiplus.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_testbitmap_OBJECTS = testbitmap.$(OBJEXT)
+testbitmap_OBJECTS = $(am_testbitmap_OBJECTS)
+am_testbits_OBJECTS = testbits.$(OBJEXT)
+testbits_OBJECTS = $(am_testbits_OBJECTS)
+am_testbmpcodec_OBJECTS = testbmpcodec.$(OBJEXT)
+testbmpcodec_OBJECTS = $(am_testbmpcodec_OBJECTS)
+am_testbrush_OBJECTS = testbrush.$(OBJEXT)
+testbrush_OBJECTS = $(am_testbrush_OBJECTS)
 am_testclip_OBJECTS = testclip.$(OBJEXT)
 testclip_OBJECTS = $(am_testclip_OBJECTS)
+am_testcodecs_OBJECTS = testcodecs.$(OBJEXT)
+testcodecs_OBJECTS = $(am_testcodecs_OBJECTS)
+am_testcustomlinecap_OBJECTS = testcustomlinecap.$(OBJEXT)
+testcustomlinecap_OBJECTS = $(am_testcustomlinecap_OBJECTS)
+am_testemfcodec_OBJECTS = testemfcodec.$(OBJEXT)
+testemfcodec_OBJECTS = $(am_testemfcodec_OBJECTS)
 am_testfont_OBJECTS = testfont.$(OBJEXT)
 testfont_OBJECTS = $(am_testfont_OBJECTS)
+am__testgdi_SOURCES_DIST = testgdi.c
+@HAVE_X11_TRUE@am_testgdi_OBJECTS = testgdi.$(OBJEXT)
+testgdi_OBJECTS = $(am_testgdi_OBJECTS)
+am_testgeneral_OBJECTS = testgeneral.$(OBJEXT)
+testgeneral_OBJECTS = $(am_testgeneral_OBJECTS)
+am_testgifcodec_OBJECTS = testgifcodec.$(OBJEXT)
+testgifcodec_OBJECTS = $(am_testgifcodec_OBJECTS)
+am_testgpimage_OBJECTS = testgpimage.$(OBJEXT)
+testgpimage_OBJECTS = $(am_testgpimage_OBJECTS)
 am_testgraphics_OBJECTS = testgraphics.$(OBJEXT)
 testgraphics_OBJECTS = $(am_testgraphics_OBJECTS)
+am_testgraphicsdraw_OBJECTS = testgraphicsdraw.$(OBJEXT)
+testgraphicsdraw_OBJECTS = $(am_testgraphicsdraw_OBJECTS)
+am_testgraphicsfill_OBJECTS = testgraphicsfill.$(OBJEXT)
+testgraphicsfill_OBJECTS = $(am_testgraphicsfill_OBJECTS)
+am_testgraphicspath_OBJECTS = testgraphicspath.$(OBJEXT)
+testgraphicspath_OBJECTS = $(am_testgraphicspath_OBJECTS)
+am_testhatchbrush_OBJECTS = testhatchbrush.$(OBJEXT)
+testhatchbrush_OBJECTS = $(am_testhatchbrush_OBJECTS)
+am_testicocodec_OBJECTS = testicocodec.$(OBJEXT)
+testicocodec_OBJECTS = $(am_testicocodec_OBJECTS)
+am_testimageattributes_OBJECTS = testimageattributes.$(OBJEXT)
+testimageattributes_OBJECTS = $(am_testimageattributes_OBJECTS)
+am_testjpegcodec_OBJECTS = testjpegcodec.$(OBJEXT)
+testjpegcodec_OBJECTS = $(am_testjpegcodec_OBJECTS)
+am_testlineargradientbrush_OBJECTS =  \
+	testlineargradientbrush.$(OBJEXT)
+testlineargradientbrush_OBJECTS =  \
+	$(am_testlineargradientbrush_OBJECTS)
+am_testmatrix_OBJECTS = testmatrix.$(OBJEXT)
+testmatrix_OBJECTS = $(am_testmatrix_OBJECTS)
+am_testmetafile_OBJECTS = testmetafile.$(OBJEXT)
+testmetafile_OBJECTS = $(am_testmetafile_OBJECTS)
+am_testpathgradientbrush_OBJECTS = testpathgradientbrush.$(OBJEXT)
+testpathgradientbrush_OBJECTS = $(am_testpathgradientbrush_OBJECTS)
 am_testpen_OBJECTS = testpen.$(OBJEXT)
 testpen_OBJECTS = $(am_testpen_OBJECTS)
 am_testpng_OBJECTS = testpng.$(OBJEXT)
 testpng_OBJECTS = $(am_testpng_OBJECTS)
+am_testpngcodec_OBJECTS = testpngcodec.$(OBJEXT)
+testpngcodec_OBJECTS = $(am_testpngcodec_OBJECTS)
+am_testregion_OBJECTS = testregion.$(OBJEXT)
+testregion_OBJECTS = $(am_testregion_OBJECTS)
 am_testreversepath_OBJECTS = testreversepath.$(OBJEXT)
 testreversepath_OBJECTS = $(am_testreversepath_OBJECTS)
+am_testsolidbrush_OBJECTS = testsolidbrush.$(OBJEXT)
+testsolidbrush_OBJECTS = $(am_testsolidbrush_OBJECTS)
+am_teststringformat_OBJECTS = teststringformat.$(OBJEXT)
+teststringformat_OBJECTS = $(am_teststringformat_OBJECTS)
+am_testtext_OBJECTS = testtext.$(OBJEXT)
+testtext_OBJECTS = $(am_testtext_OBJECTS)
+am_testtexturebrush_OBJECTS = testtexturebrush.$(OBJEXT)
+testtexturebrush_OBJECTS = $(am_testtexturebrush_OBJECTS)
+am_testtiffcodec_OBJECTS = testtiffcodec.$(OBJEXT)
+testtiffcodec_OBJECTS = $(am_testtiffcodec_OBJECTS)
+am_testwmfcodec_OBJECTS = testwmfcodec.$(OBJEXT)
+testwmfcodec_OBJECTS = $(am_testwmfcodec_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -164,12 +254,41 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(testbits_SOURCES) $(testclip_SOURCES) $(testfont_SOURCES) \
-	$(testgraphics_SOURCES) $(testpen_SOURCES) $(testpng_SOURCES) \
-	$(testreversepath_SOURCES)
-DIST_SOURCES = $(testbits_SOURCES) $(testclip_SOURCES) \
-	$(testfont_SOURCES) $(testgraphics_SOURCES) $(testpen_SOURCES) \
-	$(testpng_SOURCES) $(testreversepath_SOURCES)
+SOURCES = $(testadjustablearrowcap_SOURCES) $(testbitmap_SOURCES) \
+	$(testbits_SOURCES) $(testbmpcodec_SOURCES) \
+	$(testbrush_SOURCES) $(testclip_SOURCES) $(testcodecs_SOURCES) \
+	$(testcustomlinecap_SOURCES) $(testemfcodec_SOURCES) \
+	$(testfont_SOURCES) $(testgdi_SOURCES) $(testgeneral_SOURCES) \
+	$(testgifcodec_SOURCES) $(testgpimage_SOURCES) \
+	$(testgraphics_SOURCES) $(testgraphicsdraw_SOURCES) \
+	$(testgraphicsfill_SOURCES) $(testgraphicspath_SOURCES) \
+	$(testhatchbrush_SOURCES) $(testicocodec_SOURCES) \
+	$(testimageattributes_SOURCES) $(testjpegcodec_SOURCES) \
+	$(testlineargradientbrush_SOURCES) $(testmatrix_SOURCES) \
+	$(testmetafile_SOURCES) $(testpathgradientbrush_SOURCES) \
+	$(testpen_SOURCES) $(testpng_SOURCES) $(testpngcodec_SOURCES) \
+	$(testregion_SOURCES) $(testreversepath_SOURCES) \
+	$(testsolidbrush_SOURCES) $(teststringformat_SOURCES) \
+	$(testtext_SOURCES) $(testtexturebrush_SOURCES) \
+	$(testtiffcodec_SOURCES) $(testwmfcodec_SOURCES)
+DIST_SOURCES = $(testadjustablearrowcap_SOURCES) $(testbitmap_SOURCES) \
+	$(testbits_SOURCES) $(testbmpcodec_SOURCES) \
+	$(testbrush_SOURCES) $(testclip_SOURCES) $(testcodecs_SOURCES) \
+	$(testcustomlinecap_SOURCES) $(testemfcodec_SOURCES) \
+	$(testfont_SOURCES) $(am__testgdi_SOURCES_DIST) \
+	$(testgeneral_SOURCES) $(testgifcodec_SOURCES) \
+	$(testgpimage_SOURCES) $(testgraphics_SOURCES) \
+	$(testgraphicsdraw_SOURCES) $(testgraphicsfill_SOURCES) \
+	$(testgraphicspath_SOURCES) $(testhatchbrush_SOURCES) \
+	$(testicocodec_SOURCES) $(testimageattributes_SOURCES) \
+	$(testjpegcodec_SOURCES) $(testlineargradientbrush_SOURCES) \
+	$(testmatrix_SOURCES) $(testmetafile_SOURCES) \
+	$(testpathgradientbrush_SOURCES) $(testpen_SOURCES) \
+	$(testpng_SOURCES) $(testpngcodec_SOURCES) \
+	$(testregion_SOURCES) $(testreversepath_SOURCES) \
+	$(testsolidbrush_SOURCES) $(teststringformat_SOURCES) \
+	$(testtext_SOURCES) $(testtexturebrush_SOURCES) \
+	$(testtiffcodec_SOURCES) $(testwmfcodec_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -399,7 +518,7 @@ TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
 TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/test-driver ChangeLog
+	$(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -412,7 +531,6 @@ AWK = @AWK@
 BASE_DEPENDENCIES_CFLAGS = @BASE_DEPENDENCIES_CFLAGS@
 BASE_DEPENDENCIES_LIBS = @BASE_DEPENDENCIES_LIBS@
 CAIRO_CFLAGS = @CAIRO_CFLAGS@
-CAIRO_DIR = @CAIRO_DIR@
 CAIRO_LIBS = @CAIRO_LIBS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -545,7 +663,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)				\
 	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src			\
@@ -558,36 +676,171 @@ LDADDS = \
 	$(top_builddir)/src/libgdiplus.la \
 	-lm
 
-@HAS_X11_TRUE@testgdi_DEPENDENCIES = $(TEST_DEPS)
-@HAS_X11_TRUE@testgdi_LDADD = $(LDADDS)
-@HAS_X11_TRUE@testgdi_SOURCES = \
-@HAS_X11_TRUE@	testgdi.c
+@HAVE_X11_TRUE@testgdi_DEPENDENCIES = $(TEST_DEPS)
+@HAVE_X11_TRUE@testgdi_LDADD = $(LDADDS)
+@HAVE_X11_TRUE@testgdi_SOURCES = \
+@HAVE_X11_TRUE@	testgdi.c
 
+testadjustablearrowcap_SOURCES = \
+	testadjustablearrowcap.c
+
+testadjustablearrowcap_DEPENDENCIES = $(TEST_DEPS)
+testadjustablearrowcap_LDADD = $(LDADDS)
+testbitmap_SOURCES = \
+	testbitmap.c
+
+testbitmap_DEPENDENCIES = $(TEST_DEPS)
+testbitmap_LDADD = $(LDADDS)
 testbits_DEPENDENCIES = $(TEST_DEPS)
 testbits_LDADD = $(LDADDS)
 testbits_SOURCES = \
 	testbits.c
 
+testbmpcodec_SOURCES = \
+	testbmpcodec.c
+
+testbmpcodec_DEPENDENCIES = $(TEST_DEPS)
+testbmpcodec_LDADD = $(LDADDS)
+testbrush_SOURCES = \
+	testbrush.c
+
+testbrush_DEPENDENCIES = $(TEST_DEPS)
+testbrush_LDADD = $(LDADDS)
 testclip_SOURCES = \
 	testclip.c
 
 testclip_DEPENDENCIES = $(TEST_DEPS)
 testclip_LDADD = $(LDADDS)
+testcodecs_SOURCES = \
+	testcodecs.c
+
+testcodecs_DEPENDENCIES = $(TEST_DEPS)
+testcodecs_LDADD = $(LDADDS)
+testcustomlinecap_SOURCES = \
+	testcustomlinecap.c
+
+testcustomlinecap_DEPENDENCIES = $(TEST_DEPS)
+testcustomlinecap_LDADD = $(LDADDS)
+testemfcodec_SOURCES = \
+	testemfcodec.c
+
+testemfcodec_DEPENDENCIES = $(TEST_DEPS)
+testemfcodec_LDADD = $(LDADDS)
 testfont_DEPENDENCIES = $(TEST_DEPS)
 testfont_LDADD = $(LDADDS)
 testfont_SOURCES = \
 	testfont.c
 
+testgeneral_SOURCES = \
+	testgeneral.c
+
+testgeneral_DEPENDENCIES = $(TEST_DEPS)
+testgeneral_LDADD = $(LDADDS)
+testgifcodec_SOURCES = \
+	testgifcodec.c
+
+testgifcodec_DEPENDENCIES = $(TEST_DEPS)
+testgifcodec_LDADD = $(LDADDS)
+testgpimage_SOURCES = \
+	testgpimage.c
+
+testgpimage_DEPENDENCIES = $(TEST_DEPS)
+testgpimage_LDADD = $(LDADDS)
 testgraphics_SOURCES = \
 	testgraphics.c
 
 testgraphics_DEPENDENCIES = $(TEST_DEPS)
 testgraphics_LDADD = $(LDADDS)
+testgraphicsdraw_SOURCES = \
+	testgraphicsdraw.c
+
+testgraphicsdraw_DEPENDENCIES = $(TEST_DEPS)
+testgraphicsdraw_LDADD = $(LDADDS)
+testgraphicsfill_SOURCES = \
+	testgraphicsfill.c
+
+testgraphicsfill_DEPENDENCIES = $(TEST_DEPS)
+testgraphicsfill_LDADD = $(LDADDS)
+testgraphicspath_SOURCES = \
+	testgraphicspath.c
+
+testgraphicspath_DEPENDENCIES = $(TEST_DEPS)
+testgraphicspath_LDADD = $(LDADDS)
+testhatchbrush_SOURCES = \
+	testhatchbrush.c
+
+testhatchbrush_DEPENDENCIES = $(TEST_DEPS)
+testhatchbrush_LDADD = $(LDADDS)
+testicocodec_SOURCES = \
+	testicocodec.c
+
+testicocodec_DEPENDENCIES = $(TEST_DEPS)
+testicocodec_LDADD = $(LDADDS)
+testimageattributes_SOURCES = \
+	testimageattributes.c
+
+testimageattributes_DEPENDENCIES = $(TEST_DEPS)
+testimageattributes_LDADD = $(LDADDS)
+testjpegcodec_SOURCES = \
+	testjpegcodec.c
+
+testjpegcodec_DEPENDENCIES = $(TEST_DEPS)
+testjpegcodec_LDADD = $(LDADDS)
+testlineargradientbrush_SOURCES = \
+	testlineargradientbrush.c
+
+testlineargradientbrush_DEPENDENCIES = $(TEST_DEPS)
+testlineargradientbrush_LDADD = $(LDADDS)
+testmatrix_SOURCES = \
+	testmatrix.c
+
+testmatrix_DEPENDENCIES = $(TEST_DEPS)
+testmatrix_LDADD = $(LDADDS)
+testmetafile_SOURCES = \
+	testmetafile.c
+
+testmetafile_DEPENDENCIES = $(TEST_DEPS)
+testmetafile_LDADD = $(LDADDS)
+testpngcodec_SOURCES = \
+	testpngcodec.c
+
+testpngcodec_DEPENDENCIES = $(TEST_DEPS)
+testpngcodec_LDADD = $(LDADDS)
+testregion_SOURCES = \
+	testregion.c
+
+testregion_DEPENDENCIES = $(TEST_DEPS)
+testregion_LDADD = $(LDADDS)
 testreversepath_SOURCES = \
 	testreversepath.c
 
 testreversepath_DEPENDENCIES = $(TEST_DEPS)
 testreversepath_LDADD = $(LDADDS)
+testsolidbrush_SOURCES = \
+	testsolidbrush.c
+
+testsolidbrush_DEPENDENCIES = $(TEST_DEPS)
+testsolidbrush_LDADD = $(LDADDS)
+teststringformat_SOURCES = \
+	teststringformat.c
+
+teststringformat_DEPENDENCIES = $(TEST_DEPS)
+teststringformat_LDADD = $(LDADDS)
+testtext_SOURCES = \
+	testtext.c
+
+testtext_DEPENDENCIES = $(TEST_DEPS)
+testtext_LDADD = $(LDADDS)
+testtexturebrush_SOURCES = \
+	testtexturebrush.c
+
+testtexturebrush_DEPENDENCIES = $(TEST_DEPS)
+testtexturebrush_LDADD = $(LDADDS)
+testpathgradientbrush_SOURCES = \
+	testpathgradientbrush.c
+
+testpathgradientbrush_DEPENDENCIES = $(TEST_DEPS)
+testpathgradientbrush_LDADD = $(LDADDS)
 testpen_SOURCES = \
 	testpen.c
 
@@ -598,15 +851,33 @@ testpng_LDADD = $(LDADDS)
 testpng_SOURCES = \
 	testpng.c
 
+testtiffcodec_SOURCES = \
+	testtiffcodec.c
+
+testtiffcodec_DEPENDENCIES = $(TEST_DEPS)
+testtiffcodec_LDADD = $(LDADDS)
+testwmfcodec_SOURCES = \
+	testwmfcodec.c
+
+testwmfcodec_DEPENDENCIES = $(TEST_DEPS)
+testwmfcodec_LDADD = $(LDADDS)
+
+# TESTS += testgdi
 EXTRA_DIST = \
-	$(testgdi_SOURCES)	\
-	$(testbits_SOURCES)	\
-	$(testclip_SOURCES)	\
-	$(testfont_SOURCES)	\
-	$(testgraphics_SOURCES)	\
-	$(testpen_SOURCES) \
-	$(testpng_SOURCES)	\
-	$(testreversepath_SOURCES)
+	AdobeRGB1998.icc \
+	test-gsa.png \
+	test-trns.png \
+	test.bmp \
+	test.emf \
+	test.gif \
+	test.ico \
+	test.jpg \
+	test.otf \
+	test.png \
+	test.tif \
+	test.ttf \
+	test.wmf \
+	testhelpers.h
 
 all: all-am
 
@@ -621,9 +892,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tests/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu tests/Makefile
+	  $(AUTOMAKE) --foreign tests/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -651,21 +922,109 @@ clean-noinstPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+testadjustablearrowcap$(EXEEXT): $(testadjustablearrowcap_OBJECTS) $(testadjustablearrowcap_DEPENDENCIES) $(EXTRA_testadjustablearrowcap_DEPENDENCIES) 
+	@rm -f testadjustablearrowcap$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testadjustablearrowcap_OBJECTS) $(testadjustablearrowcap_LDADD) $(LIBS)
+
+testbitmap$(EXEEXT): $(testbitmap_OBJECTS) $(testbitmap_DEPENDENCIES) $(EXTRA_testbitmap_DEPENDENCIES) 
+	@rm -f testbitmap$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testbitmap_OBJECTS) $(testbitmap_LDADD) $(LIBS)
+
 testbits$(EXEEXT): $(testbits_OBJECTS) $(testbits_DEPENDENCIES) $(EXTRA_testbits_DEPENDENCIES) 
 	@rm -f testbits$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testbits_OBJECTS) $(testbits_LDADD) $(LIBS)
+
+testbmpcodec$(EXEEXT): $(testbmpcodec_OBJECTS) $(testbmpcodec_DEPENDENCIES) $(EXTRA_testbmpcodec_DEPENDENCIES) 
+	@rm -f testbmpcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testbmpcodec_OBJECTS) $(testbmpcodec_LDADD) $(LIBS)
+
+testbrush$(EXEEXT): $(testbrush_OBJECTS) $(testbrush_DEPENDENCIES) $(EXTRA_testbrush_DEPENDENCIES) 
+	@rm -f testbrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testbrush_OBJECTS) $(testbrush_LDADD) $(LIBS)
 
 testclip$(EXEEXT): $(testclip_OBJECTS) $(testclip_DEPENDENCIES) $(EXTRA_testclip_DEPENDENCIES) 
 	@rm -f testclip$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testclip_OBJECTS) $(testclip_LDADD) $(LIBS)
 
+testcodecs$(EXEEXT): $(testcodecs_OBJECTS) $(testcodecs_DEPENDENCIES) $(EXTRA_testcodecs_DEPENDENCIES) 
+	@rm -f testcodecs$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testcodecs_OBJECTS) $(testcodecs_LDADD) $(LIBS)
+
+testcustomlinecap$(EXEEXT): $(testcustomlinecap_OBJECTS) $(testcustomlinecap_DEPENDENCIES) $(EXTRA_testcustomlinecap_DEPENDENCIES) 
+	@rm -f testcustomlinecap$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testcustomlinecap_OBJECTS) $(testcustomlinecap_LDADD) $(LIBS)
+
+testemfcodec$(EXEEXT): $(testemfcodec_OBJECTS) $(testemfcodec_DEPENDENCIES) $(EXTRA_testemfcodec_DEPENDENCIES) 
+	@rm -f testemfcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testemfcodec_OBJECTS) $(testemfcodec_LDADD) $(LIBS)
+
 testfont$(EXEEXT): $(testfont_OBJECTS) $(testfont_DEPENDENCIES) $(EXTRA_testfont_DEPENDENCIES) 
 	@rm -f testfont$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testfont_OBJECTS) $(testfont_LDADD) $(LIBS)
 
+testgdi$(EXEEXT): $(testgdi_OBJECTS) $(testgdi_DEPENDENCIES) $(EXTRA_testgdi_DEPENDENCIES) 
+	@rm -f testgdi$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgdi_OBJECTS) $(testgdi_LDADD) $(LIBS)
+
+testgeneral$(EXEEXT): $(testgeneral_OBJECTS) $(testgeneral_DEPENDENCIES) $(EXTRA_testgeneral_DEPENDENCIES) 
+	@rm -f testgeneral$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgeneral_OBJECTS) $(testgeneral_LDADD) $(LIBS)
+
+testgifcodec$(EXEEXT): $(testgifcodec_OBJECTS) $(testgifcodec_DEPENDENCIES) $(EXTRA_testgifcodec_DEPENDENCIES) 
+	@rm -f testgifcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgifcodec_OBJECTS) $(testgifcodec_LDADD) $(LIBS)
+
+testgpimage$(EXEEXT): $(testgpimage_OBJECTS) $(testgpimage_DEPENDENCIES) $(EXTRA_testgpimage_DEPENDENCIES) 
+	@rm -f testgpimage$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgpimage_OBJECTS) $(testgpimage_LDADD) $(LIBS)
+
 testgraphics$(EXEEXT): $(testgraphics_OBJECTS) $(testgraphics_DEPENDENCIES) $(EXTRA_testgraphics_DEPENDENCIES) 
 	@rm -f testgraphics$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testgraphics_OBJECTS) $(testgraphics_LDADD) $(LIBS)
+
+testgraphicsdraw$(EXEEXT): $(testgraphicsdraw_OBJECTS) $(testgraphicsdraw_DEPENDENCIES) $(EXTRA_testgraphicsdraw_DEPENDENCIES) 
+	@rm -f testgraphicsdraw$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgraphicsdraw_OBJECTS) $(testgraphicsdraw_LDADD) $(LIBS)
+
+testgraphicsfill$(EXEEXT): $(testgraphicsfill_OBJECTS) $(testgraphicsfill_DEPENDENCIES) $(EXTRA_testgraphicsfill_DEPENDENCIES) 
+	@rm -f testgraphicsfill$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgraphicsfill_OBJECTS) $(testgraphicsfill_LDADD) $(LIBS)
+
+testgraphicspath$(EXEEXT): $(testgraphicspath_OBJECTS) $(testgraphicspath_DEPENDENCIES) $(EXTRA_testgraphicspath_DEPENDENCIES) 
+	@rm -f testgraphicspath$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testgraphicspath_OBJECTS) $(testgraphicspath_LDADD) $(LIBS)
+
+testhatchbrush$(EXEEXT): $(testhatchbrush_OBJECTS) $(testhatchbrush_DEPENDENCIES) $(EXTRA_testhatchbrush_DEPENDENCIES) 
+	@rm -f testhatchbrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testhatchbrush_OBJECTS) $(testhatchbrush_LDADD) $(LIBS)
+
+testicocodec$(EXEEXT): $(testicocodec_OBJECTS) $(testicocodec_DEPENDENCIES) $(EXTRA_testicocodec_DEPENDENCIES) 
+	@rm -f testicocodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testicocodec_OBJECTS) $(testicocodec_LDADD) $(LIBS)
+
+testimageattributes$(EXEEXT): $(testimageattributes_OBJECTS) $(testimageattributes_DEPENDENCIES) $(EXTRA_testimageattributes_DEPENDENCIES) 
+	@rm -f testimageattributes$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testimageattributes_OBJECTS) $(testimageattributes_LDADD) $(LIBS)
+
+testjpegcodec$(EXEEXT): $(testjpegcodec_OBJECTS) $(testjpegcodec_DEPENDENCIES) $(EXTRA_testjpegcodec_DEPENDENCIES) 
+	@rm -f testjpegcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testjpegcodec_OBJECTS) $(testjpegcodec_LDADD) $(LIBS)
+
+testlineargradientbrush$(EXEEXT): $(testlineargradientbrush_OBJECTS) $(testlineargradientbrush_DEPENDENCIES) $(EXTRA_testlineargradientbrush_DEPENDENCIES) 
+	@rm -f testlineargradientbrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testlineargradientbrush_OBJECTS) $(testlineargradientbrush_LDADD) $(LIBS)
+
+testmatrix$(EXEEXT): $(testmatrix_OBJECTS) $(testmatrix_DEPENDENCIES) $(EXTRA_testmatrix_DEPENDENCIES) 
+	@rm -f testmatrix$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testmatrix_OBJECTS) $(testmatrix_LDADD) $(LIBS)
+
+testmetafile$(EXEEXT): $(testmetafile_OBJECTS) $(testmetafile_DEPENDENCIES) $(EXTRA_testmetafile_DEPENDENCIES) 
+	@rm -f testmetafile$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testmetafile_OBJECTS) $(testmetafile_LDADD) $(LIBS)
+
+testpathgradientbrush$(EXEEXT): $(testpathgradientbrush_OBJECTS) $(testpathgradientbrush_DEPENDENCIES) $(EXTRA_testpathgradientbrush_DEPENDENCIES) 
+	@rm -f testpathgradientbrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testpathgradientbrush_OBJECTS) $(testpathgradientbrush_LDADD) $(LIBS)
 
 testpen$(EXEEXT): $(testpen_OBJECTS) $(testpen_DEPENDENCIES) $(EXTRA_testpen_DEPENDENCIES) 
 	@rm -f testpen$(EXEEXT)
@@ -675,9 +1034,41 @@ testpng$(EXEEXT): $(testpng_OBJECTS) $(testpng_DEPENDENCIES) $(EXTRA_testpng_DEP
 	@rm -f testpng$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testpng_OBJECTS) $(testpng_LDADD) $(LIBS)
 
+testpngcodec$(EXEEXT): $(testpngcodec_OBJECTS) $(testpngcodec_DEPENDENCIES) $(EXTRA_testpngcodec_DEPENDENCIES) 
+	@rm -f testpngcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testpngcodec_OBJECTS) $(testpngcodec_LDADD) $(LIBS)
+
+testregion$(EXEEXT): $(testregion_OBJECTS) $(testregion_DEPENDENCIES) $(EXTRA_testregion_DEPENDENCIES) 
+	@rm -f testregion$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testregion_OBJECTS) $(testregion_LDADD) $(LIBS)
+
 testreversepath$(EXEEXT): $(testreversepath_OBJECTS) $(testreversepath_DEPENDENCIES) $(EXTRA_testreversepath_DEPENDENCIES) 
 	@rm -f testreversepath$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testreversepath_OBJECTS) $(testreversepath_LDADD) $(LIBS)
+
+testsolidbrush$(EXEEXT): $(testsolidbrush_OBJECTS) $(testsolidbrush_DEPENDENCIES) $(EXTRA_testsolidbrush_DEPENDENCIES) 
+	@rm -f testsolidbrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testsolidbrush_OBJECTS) $(testsolidbrush_LDADD) $(LIBS)
+
+teststringformat$(EXEEXT): $(teststringformat_OBJECTS) $(teststringformat_DEPENDENCIES) $(EXTRA_teststringformat_DEPENDENCIES) 
+	@rm -f teststringformat$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(teststringformat_OBJECTS) $(teststringformat_LDADD) $(LIBS)
+
+testtext$(EXEEXT): $(testtext_OBJECTS) $(testtext_DEPENDENCIES) $(EXTRA_testtext_DEPENDENCIES) 
+	@rm -f testtext$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testtext_OBJECTS) $(testtext_LDADD) $(LIBS)
+
+testtexturebrush$(EXEEXT): $(testtexturebrush_OBJECTS) $(testtexturebrush_DEPENDENCIES) $(EXTRA_testtexturebrush_DEPENDENCIES) 
+	@rm -f testtexturebrush$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testtexturebrush_OBJECTS) $(testtexturebrush_LDADD) $(LIBS)
+
+testtiffcodec$(EXEEXT): $(testtiffcodec_OBJECTS) $(testtiffcodec_DEPENDENCIES) $(EXTRA_testtiffcodec_DEPENDENCIES) 
+	@rm -f testtiffcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testtiffcodec_OBJECTS) $(testtiffcodec_LDADD) $(LIBS)
+
+testwmfcodec$(EXEEXT): $(testwmfcodec_OBJECTS) $(testwmfcodec_DEPENDENCIES) $(EXTRA_testwmfcodec_DEPENDENCIES) 
+	@rm -f testwmfcodec$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testwmfcodec_OBJECTS) $(testwmfcodec_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -685,13 +1076,43 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testadjustablearrowcap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testbitmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testbits.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testbmpcodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testbrush.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testclip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testcodecs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testcustomlinecap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testemfcodec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testfont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgdi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgeneral.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgifcodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgpimage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgraphics.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgraphicsdraw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgraphicsfill.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgraphicspath.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testhatchbrush.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testicocodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testimageattributes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testjpegcodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testlineargradientbrush.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testmatrix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testmetafile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpathgradientbrush.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpng.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testpngcodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testregion.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testreversepath.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testsolidbrush.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/teststringformat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testtext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testtexturebrush.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testtiffcodec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testwmfcodec.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -913,9 +1334,37 @@ recheck: all
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+testadjustablearrowcap.log: testadjustablearrowcap$(EXEEXT)
+	@p='testadjustablearrowcap$(EXEEXT)'; \
+	b='testadjustablearrowcap'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testbitmap.log: testbitmap$(EXEEXT)
+	@p='testbitmap$(EXEEXT)'; \
+	b='testbitmap'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testbits.log: testbits$(EXEEXT)
 	@p='testbits$(EXEEXT)'; \
 	b='testbits'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testbmpcodec.log: testbmpcodec$(EXEEXT)
+	@p='testbmpcodec$(EXEEXT)'; \
+	b='testbmpcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testbrush.log: testbrush$(EXEEXT)
+	@p='testbrush$(EXEEXT)'; \
+	b='testbrush'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -927,9 +1376,51 @@ testclip.log: testclip$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testcodecs.log: testcodecs$(EXEEXT)
+	@p='testcodecs$(EXEEXT)'; \
+	b='testcodecs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testcustomlinecap.log: testcustomlinecap$(EXEEXT)
+	@p='testcustomlinecap$(EXEEXT)'; \
+	b='testcustomlinecap'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testemfcodec.log: testemfcodec$(EXEEXT)
+	@p='testemfcodec$(EXEEXT)'; \
+	b='testemfcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testfont.log: testfont$(EXEEXT)
 	@p='testfont$(EXEEXT)'; \
 	b='testfont'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgifcodec.log: testgifcodec$(EXEEXT)
+	@p='testgifcodec$(EXEEXT)'; \
+	b='testgifcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgeneral.log: testgeneral$(EXEEXT)
+	@p='testgeneral$(EXEEXT)'; \
+	b='testgeneral'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgpimage.log: testgpimage$(EXEEXT)
+	@p='testgpimage$(EXEEXT)'; \
+	b='testgpimage'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -941,9 +1432,79 @@ testgraphics.log: testgraphics$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-testreversepath.log: testreversepath$(EXEEXT)
-	@p='testreversepath$(EXEEXT)'; \
-	b='testreversepath'; \
+testgraphicsdraw.log: testgraphicsdraw$(EXEEXT)
+	@p='testgraphicsdraw$(EXEEXT)'; \
+	b='testgraphicsdraw'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgraphicsfill.log: testgraphicsfill$(EXEEXT)
+	@p='testgraphicsfill$(EXEEXT)'; \
+	b='testgraphicsfill'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testgraphicspath.log: testgraphicspath$(EXEEXT)
+	@p='testgraphicspath$(EXEEXT)'; \
+	b='testgraphicspath'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testhatchbrush.log: testhatchbrush$(EXEEXT)
+	@p='testhatchbrush$(EXEEXT)'; \
+	b='testhatchbrush'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testicocodec.log: testicocodec$(EXEEXT)
+	@p='testicocodec$(EXEEXT)'; \
+	b='testicocodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testimageattributes.log: testimageattributes$(EXEEXT)
+	@p='testimageattributes$(EXEEXT)'; \
+	b='testimageattributes'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testjpegcodec.log: testjpegcodec$(EXEEXT)
+	@p='testjpegcodec$(EXEEXT)'; \
+	b='testjpegcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testlineargradientbrush.log: testlineargradientbrush$(EXEEXT)
+	@p='testlineargradientbrush$(EXEEXT)'; \
+	b='testlineargradientbrush'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testmatrix.log: testmatrix$(EXEEXT)
+	@p='testmatrix$(EXEEXT)'; \
+	b='testmatrix'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testmetafile.log: testmetafile$(EXEEXT)
+	@p='testmetafile$(EXEEXT)'; \
+	b='testmetafile'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testpathgradientbrush.log: testpathgradientbrush$(EXEEXT)
+	@p='testpathgradientbrush$(EXEEXT)'; \
+	b='testpathgradientbrush'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -958,6 +1519,69 @@ testpen.log: testpen$(EXEEXT)
 testpng.log: testpng$(EXEEXT)
 	@p='testpng$(EXEEXT)'; \
 	b='testpng'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testpngcodec.log: testpngcodec$(EXEEXT)
+	@p='testpngcodec$(EXEEXT)'; \
+	b='testpngcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testregion.log: testregion$(EXEEXT)
+	@p='testregion$(EXEEXT)'; \
+	b='testregion'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testreversepath.log: testreversepath$(EXEEXT)
+	@p='testreversepath$(EXEEXT)'; \
+	b='testreversepath'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testsolidbrush.log: testsolidbrush$(EXEEXT)
+	@p='testsolidbrush$(EXEEXT)'; \
+	b='testsolidbrush'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+teststringformat.log: teststringformat$(EXEEXT)
+	@p='teststringformat$(EXEEXT)'; \
+	b='teststringformat'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testtexturebrush.log: testtexturebrush$(EXEEXT)
+	@p='testtexturebrush$(EXEEXT)'; \
+	b='testtexturebrush'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testtext.log: testtext$(EXEEXT)
+	@p='testtext$(EXEEXT)'; \
+	b='testtext'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testtiffcodec.log: testtiffcodec$(EXEEXT)
+	@p='testtiffcodec$(EXEEXT)'; \
+	b='testtiffcodec'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testwmfcodec.log: testwmfcodec$(EXEEXT)
+	@p='testwmfcodec$(EXEEXT)'; \
+	b='testwmfcodec'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1134,7 +1758,6 @@ uninstall-am:
 
 .PRECIOUS: Makefile
 
-@HAS_X11_TRUE@	testgdi ${noinst_PROGRAMS}
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
