@@ -44,7 +44,7 @@ EmfPlusHeader (MetafilePlayContext *context, WORD flags, BYTE* data, int size)
 	printf ("\n\tHorizontal Resolution %d", GETDW(DWP4));
 	printf ("\n\tVertical Resolution %d", GETDW(DWP5));
 #endif
-	context->metafile->metafile_header.Type = (flags & 1) ? METAFILETYPE_EMFPLUSDUAL : METAFILETYPE_EMFPLUSONLY;
+	context->metafile->metafile_header.Type = (flags & 1) ? MetafileTypeEmfPlusDual : MetafileTypeEmfPlusOnly;
 	/* ObjectHeader, not Version, is returned to be compatible with GDI+ */
 	context->metafile->metafile_header.Version = GETDW(DWP2);
 	/* Horizontal and Vertical Resolution aren't reported correctly by GDI+ (generally 0) */
@@ -149,7 +149,6 @@ gdip_metafile_play_emfplus_block (MetafilePlayContext *context, BYTE* data, int 
 		WORD func = (WORD)record;
 		WORD flags = (record >> 16);
 		DWORD size = GETDW(EMF_RECORDSIZE);
-		int params = (size - EMF_MIN_RECORD_SIZE) / sizeof (DWORD);
 #ifdef DEBUG_EMFPLUS
 		printf ("\n\tEMF+[#%d] size %d ", i++, size);
 #endif

@@ -17,6 +17,7 @@
 
 #include "GdiPlusFlat.h"
 #include <X11/Xlib.h>
+#include "testhelpers.h"
 
 typedef struct win {
 	Display *dpy;
@@ -33,6 +34,8 @@ static void win_deinit(win_t *win);
 static void win_draw(win_t *win);
 static void win_handle_events(win_t *win);
 
+GpStatus GdipCreateFromXDrawable_linux(Drawable d, Display *dpy, GpGraphics **graphics);
+
 #define CHECK_GDIP_ST(st)	do { if(st != Ok) { g_print("got st: %d expected Ok", st); } } while (0)
 
 static void
@@ -46,7 +49,7 @@ win_draw(win_t *win)
 	XClearWindow(win->dpy, win->win);
 
 	GdipCreateFromXDrawable_linux (win->win, win->dpy, &gp);
-        {	
+	{
 		GpPen *pen;
 		GpSolidFill *brush;
 		int a = 255;
@@ -69,56 +72,56 @@ win_draw(win_t *win)
 	
 	
 	
-	unis = g_utf8_to_utf16 ("test.jpg", -1, NULL, NULL, NULL);
+	unis = createWchar ("test.jpg");
 	st = GdipLoadImageFromFile (unis, &img);
 	CHECK_GDIP_ST(st);
 	st = GdipDrawImage (gp, img, 0, 0);
 	CHECK_GDIP_ST(st);
-	g_free (unis);
+	freeWchar (unis);
 	GdipDisposeImage (img);
 	img = NULL;
 
 	printf("jpg drawn \n");
 
-	unis = g_utf8_to_utf16 ("test.tif", -1, NULL, NULL, NULL);
+	unis = createWchar ("test.tif");
 	st = GdipLoadImageFromFile (unis, &img);
 	CHECK_GDIP_ST(st);
 	st = GdipDrawImage (gp, img, 100, 0);
 	CHECK_GDIP_ST(st);
-	g_free (unis);
+	freeWchar (unis);
 	GdipDisposeImage (img);
 	img = NULL;
 
 	printf("tif drawn \n");
 
-	unis = g_utf8_to_utf16 ("test.gif", -1, NULL, NULL, NULL);
+	unis = createWchar ("test.gif");
 	st = GdipLoadImageFromFile (unis, &img);
 	CHECK_GDIP_ST(st);
 	st = GdipDrawImage (gp, img, 200, 0);
 	CHECK_GDIP_ST(st);
-	g_free (unis);
+	freeWchar (unis);
 	GdipDisposeImage (img);
 	img = NULL;
 
 	printf("gif drawn \n");
 
-	unis = g_utf8_to_utf16 ("test.png", -1, NULL, NULL, NULL);
+	unis = createWchar ("test.png");
 	st = GdipLoadImageFromFile (unis, &img);
 	CHECK_GDIP_ST(st);
 	st = GdipDrawImage (gp, img, 0, 100);
 	CHECK_GDIP_ST(st);
-	g_free (unis);
+	freeWchar (unis);
 	GdipDisposeImage (img);
 	img = NULL;
 
 	printf("png drawn \n");
 
-	unis = g_utf8_to_utf16 ("test.bmp", -1, NULL, NULL, NULL);
+	unis = createWchar ("test.bmp");
 	st = GdipLoadImageFromFile (unis, &img);
 	CHECK_GDIP_ST(st);
 	st = GdipDrawImage (gp, img, 200, 100);
 	CHECK_GDIP_ST(st);
-	g_free (unis);
+	freeWchar (unis);
 	GdipDisposeImage (img);
 	img = NULL;
 
@@ -130,10 +133,7 @@ int
   main(int argc, char *argv[])
 {
 	win_t win;
-	GdiplusStartupInput gdiplusStartupInput;
-	ULONG_PTR gdiplusToken;
-
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	STARTUP;
 
 	win.dpy = XOpenDisplay(0);
 
@@ -146,13 +146,16 @@ int
 
 	win_draw(&win);
 
-	win_handle_events(&win);
+	if (FALSE /* during unit tests */)
+		sleep (1);
+	else
+		win_handle_events(&win);
 
 	win_deinit(&win);
 
 	XCloseDisplay(win.dpy);
 
-	GdiplusShutdown(gdiplusToken);
+	SHUTDOWN;
 	return 0;
 }
 

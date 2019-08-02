@@ -23,10 +23,8 @@ BuildRequires:  libjpeg-devel
 BuildRequires:  libpng-devel
 BuildRequires:  libtiff-devel
 %if 0%{?suse_version}
-BuildRequires:  xorg-x11-libXrender-devel
 BuildRequires:  freetype2-devel
 %else
-BuildRequires:  libXrender-devel
 BuildRequires:  freetype-devel
 %endif
 
@@ -38,7 +36,7 @@ Windows.Forms.
 %defattr(-, root, root)
 %_libdir/libgdiplus.so*
 %_libdir/pkgconfig/libgdiplus.pc
-%doc AUTHORS COPYING ChangeLog* NEWS README
+%doc AUTHORS COPYING ChangeLog* NEWS README.md
 
 %prep
 %setup -q -n %{real_name}-%{version}

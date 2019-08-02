@@ -33,19 +33,22 @@
 
 GpStatus WINGDIPAPI GdipCreatePen1 (ARGB argb, REAL width, GpUnit unit, GpPen **pen);
 GpStatus WINGDIPAPI GdipCreatePen2 (GpBrush *brush, REAL width, GpUnit unit, GpPen **pen);
-GpStatus WINGDIPAPI GdipClonePen (GpPen *pen, GpPen **clonedpen);
+GpStatus WINGDIPAPI GdipClonePen (GpPen *pen, GpPen **clonepen);
 GpStatus WINGDIPAPI GdipDeletePen (GpPen *pen);
 
 GpStatus WINGDIPAPI GdipSetPenWidth (GpPen *pen, REAL width);
 GpStatus WINGDIPAPI GdipGetPenWidth (GpPen *pen, REAL *width);
 
+GpStatus WINGDIPAPI GdipGetPenUnit (GpPen *pen, GpUnit *unit);
+GpStatus WINGDIPAPI GdipSetPenUnit (GpPen *pen, GpUnit unit);
+
 GpStatus WINGDIPAPI GdipSetPenBrushFill (GpPen *pen, GpBrush *brush);
 GpStatus WINGDIPAPI GdipGetPenBrushFill (GpPen *pen, GpBrush **brush);
-GpStatus WINGDIPAPI GdipGetPenFillType (GpPen *pen, GpPenType *penType);
+GpStatus WINGDIPAPI GdipGetPenFillType (GpPen *pen, GpPenType *type);
 GpStatus WINGDIPAPI GdipSetPenColor (GpPen *pen, ARGB color);
 GpStatus WINGDIPAPI GdipGetPenColor (GpPen *pen, ARGB *color);
-GpStatus WINGDIPAPI GdipSetPenDashStyle (GpPen *pen, GpDashStyle dashStyle);
-GpStatus WINGDIPAPI GdipGetPenDashStyle (GpPen *pen, GpDashStyle *dashStyle);
+GpStatus WINGDIPAPI GdipSetPenDashStyle (GpPen *pen, GpDashStyle dashstyle);
+GpStatus WINGDIPAPI GdipGetPenDashStyle (GpPen *pen, GpDashStyle *dashstyle);
 GpStatus WINGDIPAPI GdipSetPenDashOffset (GpPen *pen, REAL offset);
 GpStatus WINGDIPAPI GdipGetPenDashOffset (GpPen *pen, REAL *offset);
 GpStatus WINGDIPAPI GdipGetPenDashCount (GpPen *pen, INT *count);
@@ -83,10 +86,5 @@ GpStatus WINGDIPAPI GdipMultiplyPenTransform (GpPen *pen, GpMatrix *matrix, GpMa
 GpStatus WINGDIPAPI GdipTranslatePenTransform (GpPen *pen, REAL dx, REAL dy, GpMatrixOrder order);
 GpStatus WINGDIPAPI GdipScalePenTransform (GpPen *pen, REAL sx, REAL sy, GpMatrixOrder order);
 GpStatus WINGDIPAPI GdipRotatePenTransform (GpPen *pen, REAL angle, GpMatrixOrder order);
-
-/* missing API
-	GdipGetPenUnit
-	GdipSetPenUnit
-*/
 
 #endif

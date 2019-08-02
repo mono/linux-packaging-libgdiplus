@@ -54,6 +54,7 @@ GpStatus WINGDIPAPI GdipSaveImageToDelegate_linux (GpImage *image, GetBytesDeleg
 /* GDI+ exported Image functions */
 GpStatus WINGDIPAPI GdipLoadImageFromStream (void /*IStream*/ *stream, GpImage **image);
 GpStatus WINGDIPAPI GdipLoadImageFromFile (GDIPCONST WCHAR *file, GpImage **image); 
+GpStatus WINGDIPAPI GdipLoadImageFromStreamICM (void /*IStream*/ *stream, GpImage **image);
 GpStatus WINGDIPAPI GdipLoadImageFromFileICM (GDIPCONST WCHAR* filename, GpImage **image);
 
 GpStatus WINGDIPAPI GdipSaveImageToFile (GpImage *image, GDIPCONST WCHAR *file, GDIPCONST CLSID *clsidEncoder, GDIPCONST EncoderParameters *encoderParams); 
@@ -65,7 +66,7 @@ GpStatus WINGDIPAPI GdipGetImageBounds (GpImage *image, GpRectF *srcRect, GpUnit
 GpStatus WINGDIPAPI GdipGetImageDimension (GpImage *image, REAL *width, REAL *height);
 GpStatus WINGDIPAPI GdipGetImageType (GpImage *image, ImageType *type);
 GpStatus WINGDIPAPI GdipGetImageWidth (GpImage *image, UINT *width);
-GpStatus WINGDIPAPI GdipGetImageHeight (GpImage *image, UINT *heigth);
+GpStatus WINGDIPAPI GdipGetImageHeight (GpImage *image, UINT *height);
 GpStatus WINGDIPAPI GdipGetImageHorizontalResolution (GpImage *image, REAL *resolution);
 GpStatus WINGDIPAPI GdipGetImageVerticalResolution (GpImage *image, REAL *resolution);
 GpStatus WINGDIPAPI GdipGetImageFlags (GpImage *image, UINT *flags);
@@ -93,9 +94,6 @@ GpStatus WINGDIPAPI GdipSetPropertyItem (GpImage *image, GDIPCONST PropertyItem 
 GpStatus WINGDIPAPI GdipGetAllPropertyItems (GpImage *image, UINT totalBufferSize, UINT numProperties, PropertyItem *allItems);
 GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage);
 GpStatus WINGDIPAPI GdipDisposeImage (GpImage *image);
+GpStatus WINGDIPAPI GdipImageForceValidation (GpImage *image);
 
-/* missing API
-	GdipLoadImageFromStreamICM
-	GdipImageForceValidation
- */
 #endif

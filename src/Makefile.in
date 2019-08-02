@@ -89,9 +89,20 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@USE_PANGO_RENDERING_TRUE@am__append_1 = \
+@USE_PANGO_RENDERING_TRUE@	text-pango.c			\
+@USE_PANGO_RENDERING_TRUE@	text-pango-private.h
+
+@USE_PANGO_RENDERING_FALSE@am__append_2 = \
+@USE_PANGO_RENDERING_FALSE@	text-cairo.c			\
+@USE_PANGO_RENDERING_FALSE@	text-cairo-private.h
+
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -130,6 +141,43 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libgdiplus_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__libgdiplus_la_SOURCES_DIST = adjustablearrowcap.c \
+	adjustablearrowcap.h adjustablearrowcap-private.h \
+	alpha-premul-table.inc bitmap.c bitmap.h bitmap-private.h \
+	brush.c brush.h brush-private.h carbon-private.c \
+	carbon-private.h codecs.h codecs-private.h customlinecap.c \
+	customlinecap.h customlinecap-private.h dstream.c dstream.h \
+	font.c font.h font-private.h fontcollection.h \
+	fontcollection-private.h fontfamily.h fontfamily-private.h \
+	gdi32.h gdi32.c GdiPlusFlat.h gdiplus-private.h gdip.h \
+	gdipenums.h gdiplusimaging.h gdipluspixelformats.h \
+	gdipstructs.h general.c general.h general-private.h graphics.c \
+	graphics.h graphics-cairo.c graphics-cairo-private.h \
+	graphics-metafile.c graphics-metafile-private.h \
+	graphics-private.h graphics-path.c graphics-path.h \
+	graphics-path-private.h graphics-pathiterator.c \
+	graphics-pathiterator.h graphics-pathiterator-private.h \
+	hatchbrush.c hatchbrush.h hatchbrush-private.h icocodec.c \
+	icocodec.h image.c image.h image-private.h imageattributes.c \
+	imageattributes.h imageattributes-private.h \
+	lineargradientbrush.c lineargradientbrush.h \
+	lineargradientbrush-private.h matrix.c matrix.h \
+	matrix-private.h metafile.c metafile.h metafile-private.h \
+	pathgradientbrush.c pathgradientbrush.h \
+	pathgradientbrush-private.h pen.c pen.h pen-private.h print.c \
+	region.c region.h region-private.h region-bitmap.c \
+	region-bitmap.h region-path-tree.c region-path-tree.h \
+	solidbrush.c solidbrush.h solidbrush-private.h stringformat.c \
+	stringformat.h stringformat-private.h text.c text.h \
+	text-metafile.c text-metafile-private.h texturebrush.c \
+	texturebrush.h texturebrush-private.h win32structs.h \
+	bmpcodec.h bmpcodec.c emfcodec.c emfcodec.h emfplus.c \
+	emfplus.h gifcodec.h gifcodec.c jpegcodec.h jpegcodec.c \
+	pngcodec.h pngcodec.c tiffcodec.h tiffcodec.c wmfcodec.c \
+	wmfcodec.h text-pango.c text-pango-private.h text-cairo.c \
+	text-cairo-private.h
+@USE_PANGO_RENDERING_TRUE@am__objects_1 = text-pango.lo
+@USE_PANGO_RENDERING_FALSE@am__objects_2 = text-cairo.lo
 am_libgdiplus_la_OBJECTS = adjustablearrowcap.lo bitmap.lo brush.lo \
 	carbon-private.lo customlinecap.lo dstream.lo font.lo gdi32.lo \
 	general.lo graphics.lo graphics-cairo.lo graphics-metafile.lo \
@@ -137,10 +185,10 @@ am_libgdiplus_la_OBJECTS = adjustablearrowcap.lo bitmap.lo brush.lo \
 	icocodec.lo image.lo imageattributes.lo lineargradientbrush.lo \
 	matrix.lo metafile.lo pathgradientbrush.lo pen.lo print.lo \
 	region.lo region-bitmap.lo region-path-tree.lo solidbrush.lo \
-	stringformat.lo text.lo text-cairo.lo text-pango.lo \
-	text-metafile.lo texturebrush.lo bmpcodec.lo emfcodec.lo \
-	emfplus.lo gifcodec.lo jpegcodec.lo pngcodec.lo tiffcodec.lo \
-	wmfcodec.lo
+	stringformat.lo text.lo text-metafile.lo texturebrush.lo \
+	bmpcodec.lo emfcodec.lo emfplus.lo gifcodec.lo jpegcodec.lo \
+	pngcodec.lo tiffcodec.lo wmfcodec.lo $(am__objects_1) \
+	$(am__objects_2)
 libgdiplus_la_OBJECTS = $(am_libgdiplus_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -181,7 +229,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libgdiplus_la_SOURCES)
-DIST_SOURCES = $(libgdiplus_la_SOURCES)
+DIST_SOURCES = $(am__libgdiplus_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -206,8 +254,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	ChangeLog
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -220,7 +267,6 @@ AWK = @AWK@
 BASE_DEPENDENCIES_CFLAGS = @BASE_DEPENDENCIES_CFLAGS@
 BASE_DEPENDENCIES_LIBS = @BASE_DEPENDENCIES_LIBS@
 CAIRO_CFLAGS = @CAIRO_CFLAGS@
-CAIRO_DIR = @CAIRO_DIR@
 CAIRO_LIBS = @CAIRO_LIBS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -354,127 +400,42 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libgdiplus.la
-libgdiplus_la_SOURCES = \
-	adjustablearrowcap.c		\
-	adjustablearrowcap.h		\
-	adjustablearrowcap-private.h	\
-	alpha-premul-table.inc		\
-	bitmap.c			\
-	bitmap.h			\
-	bitmap-private.h		\
-	brush.c				\
-	brush.h				\
-	brush-private.h			\
-	carbon-private.c		\
-	carbon-private.h		\
-	codecs.h			\
-	codecs-private.h		\
-	customlinecap.c			\
-	customlinecap.h			\
-	customlinecap-private.h		\
-	dstream.c 			\
-	dstream.h			\
-	font.c				\
-	font.h				\
-	font-private.h			\
-	fontcollection.h		\
-	fontcollection-private.h	\
-	fontfamily.h			\
-	fontfamily-private.h		\
-	gdi32.h				\
-	gdi32.c				\
-	GdiPlusFlat.h			\
-	gdiplus-private.h		\
-	gdip.h				\
-	gdipenums.h			\
-	gdipstructs.h			\
-	general.c			\
-	general.h			\
-	general-private.h		\
-	graphics.c			\
-	graphics.h			\
-	graphics-cairo.c		\
-	graphics-cairo-private.h	\
-	graphics-metafile.c		\
-	graphics-metafile-private.h	\
-	graphics-private.h		\
-	graphics-path.c			\
-	graphics-path.h			\
-	graphics-path-private.h		\
-	graphics-pathiterator.c		\
-	graphics-pathiterator.h		\
-	graphics-pathiterator-private.h	\
-	hatchbrush.c			\
-	hatchbrush.h			\
-	hatchbrush-private.h		\
-	icocodec.c			\
-	icocodec.h			\
-	image.c				\
-	image.h				\
-	image-private.h			\
-	imageattributes.c 		\
-	imageattributes.h		\
-	imageattributes-private.h	\
-	lineargradientbrush.c 		\
-	lineargradientbrush.h 		\
-	lineargradientbrush-private.h	\
-	matrix.c			\
-	matrix.h			\
-	matrix-private.h		\
-	metafile.c			\
-	metafile.h			\
-	metafile-private.h		\
-	pathgradientbrush.c 		\
-	pathgradientbrush.h 		\
-	pathgradientbrush-private.h	\
-	pen.c				\
-	pen.h				\
-	pen-private.h			\
-	print.c				\
-	region.c			\
-	region.h			\
-	region-private.h		\
-	region-bitmap.c			\
-	region-bitmap.h			\
-	region-path-tree.c		\
-	region-path-tree.h		\
-	solidbrush.c			\
-	solidbrush.h			\
-	solidbrush-private.h		\
-	stringformat.c			\
-	stringformat.h			\
-	stringformat-private.h		\
-	text.c				\
-	text.h				\
-	text-cairo.c			\
-	text-cairo-private.h		\
-	text-pango.c			\
-	text-pango-private.h		\
-	text-metafile.c			\
-	text-metafile-private.h		\
-	texturebrush.c			\
-	texturebrush.h			\
-	texturebrush-private.h		\
-	win32structs.h			\
-	bmpcodec.h			\
-	bmpcodec.c			\
-	emfcodec.c			\
-	emfcodec.h			\
-	emfplus.c			\
-	emfplus.h			\
-	gifcodec.h			\
-	gifcodec.c			\
-	jpegcodec.h			\
-	jpegcodec.c			\
-	pngcodec.h			\
-	pngcodec.c			\
-	tiffcodec.h			\
-	tiffcodec.c			\
-	wmfcodec.c			\
-	wmfcodec.h
-
+libgdiplus_la_SOURCES = adjustablearrowcap.c adjustablearrowcap.h \
+	adjustablearrowcap-private.h alpha-premul-table.inc bitmap.c \
+	bitmap.h bitmap-private.h brush.c brush.h brush-private.h \
+	carbon-private.c carbon-private.h codecs.h codecs-private.h \
+	customlinecap.c customlinecap.h customlinecap-private.h \
+	dstream.c dstream.h font.c font.h font-private.h \
+	fontcollection.h fontcollection-private.h fontfamily.h \
+	fontfamily-private.h gdi32.h gdi32.c GdiPlusFlat.h \
+	gdiplus-private.h gdip.h gdipenums.h gdiplusimaging.h \
+	gdipluspixelformats.h gdipstructs.h general.c general.h \
+	general-private.h graphics.c graphics.h graphics-cairo.c \
+	graphics-cairo-private.h graphics-metafile.c \
+	graphics-metafile-private.h graphics-private.h graphics-path.c \
+	graphics-path.h graphics-path-private.h \
+	graphics-pathiterator.c graphics-pathiterator.h \
+	graphics-pathiterator-private.h hatchbrush.c hatchbrush.h \
+	hatchbrush-private.h icocodec.c icocodec.h image.c image.h \
+	image-private.h imageattributes.c imageattributes.h \
+	imageattributes-private.h lineargradientbrush.c \
+	lineargradientbrush.h lineargradientbrush-private.h matrix.c \
+	matrix.h matrix-private.h metafile.c metafile.h \
+	metafile-private.h pathgradientbrush.c pathgradientbrush.h \
+	pathgradientbrush-private.h pen.c pen.h pen-private.h print.c \
+	region.c region.h region-private.h region-bitmap.c \
+	region-bitmap.h region-path-tree.c region-path-tree.h \
+	solidbrush.c solidbrush.h solidbrush-private.h stringformat.c \
+	stringformat.h stringformat-private.h text.c text.h \
+	text-metafile.c text-metafile-private.h texturebrush.c \
+	texturebrush.h texturebrush-private.h win32structs.h \
+	bmpcodec.h bmpcodec.c emfcodec.c emfcodec.h emfplus.c \
+	emfplus.h gifcodec.h gifcodec.c jpegcodec.h jpegcodec.c \
+	pngcodec.h pngcodec.c tiffcodec.h tiffcodec.c wmfcodec.c \
+	wmfcodec.h $(am__append_1) $(am__append_2)
 libgdiplus_la_LIBADD = $(GDIPLUS_LIBS)
-INCLUDES = $(GDIPLUS_CFLAGS) -Wall -Wno-unused -Wno-format
+AM_CPPFLAGS = $(GDIPLUS_CFLAGS)
+EXTRA_DIST = libgdiplus.vcxproj
 all: all-am
 
 .SUFFIXES:
@@ -488,9 +449,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --foreign src/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \

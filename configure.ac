@@ -1,14 +1,17 @@
-AC_INIT(libgdiplus, [5.6.1], 
-	[https://bugzilla.xamarin.com/enter_bug.cgi?product=Class%20Libraries&component=libgdiplus])
-	AC_CONFIG_SRCDIR([README])
+AC_INIT(libgdiplus, [6.0],
+	[https://github.com/mono/mono/issues/new])
 
+AC_CONFIG_SRCDIR([README.md])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_SYSTEM
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 AM_PROG_LIBTOOL
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_C_BIGENDIAN
 
@@ -25,23 +28,52 @@ GDIPLUS_CFLAGS="`$PKG_CONFIG --cflags glib-2.0 `"
 CAIRO_REQUIRED_VERSION="1.6.4"
 PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_REQUIRED_VERSION)
 
-# Optional use (experimental and unsupported) of Pango's text rendering on top of Cairo
-AC_ARG_WITH(pango, [  --with-pango],[text_v=pango],[text_v=cairo])
+# Optional use of Pango's text rendering on top of Cairo
+AC_ARG_WITH(pango, [  --with-pango            use Pango to measure and draw text],[text_v=pango],[text_v=default])
 
-CAIRO_DIR=""
+GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -std=gnu99"
+
+AC_ARG_ENABLE(warnaserror, AS_HELP_STRING([--enable-warnaserror],[Enable treating warnings as errors.]),[warnaserror=yes],[warnaserror=no])
+
+if test $warnaserror = "yes"; then
+  GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS -Werror -Wno-unknown-warning-option -Wno-clobbered -Wno-typedef-redefinition"
+fi
+
+AC_ARG_ENABLE(asan, AS_HELP_STRING([--enable-asan],[Enable address sanitizer.]),[asan=yes],[asan=no])
+
+if test $asan = "yes"; then
+  GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS -fsanitize=address,signed-integer-overflow,undefined -g -O1"
+  LDFLAGS="$LDFLAGS -fsanitize=address,signed-integer-overflow,undefined"
+fi
+
+AC_ARG_ENABLE(coverage, AS_HELP_STRING([--enable-coverage],[Enable code coverage.]),[coverage=yes],[coverage=no])
+
+if test $coverage = "yes"; then
+  GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS --coverage -g"
+  LDFLAGS="$LDFLAGS --coverage"
+fi
+
 CAIRO_LIBS="`pkg-config --libs cairo `"
 CAIRO_CFLAGS="`pkg-config --cflags cairo `"
 cairo_info="`pkg-config --modversion cairo ` (system)"
 GDIPLUS_PKG_REQ="cairo"
 
+PANGO_REQUIRED_VERSION="1.40.14"
 if test $text_v = "pango"; then
-	PANGO_REQUIRED_VERSION="1.10"
-	PKG_CHECK_MODULES(PANGO, pango >= $PANGO_REQUIRED_VERSION)
+  PKG_CHECK_MODULES(PANGO, pango >= $PANGO_REQUIRED_VERSION)
+fi
+if test $text_v = "default"; then
+  PKG_CHECK_MODULES(PANGO, pango >= $PANGO_REQUIRED_VERSION,
+	  [text_v=pango], [text_v=cairo])
+fi
+if test $text_v = "pango"; then
 	PANGO_LIBS="`pkg-config --libs pangocairo `"
 	PANGO_CFLAGS="`pkg-config --cflags pangocairo `"
-	AC_DEFINE(USE_PANGO_RENDERING,1,[Use Pango to measure and draw text (INCOMPLETE and UNSUPPORTED)])
+	AC_DEFINE(USE_PANGO_RENDERING,1,[Use Pango to measure and draw text])
 	GDIPLUS_PKG_REQ="$GDIPLUS_PKG_REQ pangocairo-1.0"
 fi
+
+AM_CONDITIONAL(USE_PANGO_RENDERING, [test $text_v = "pango"])
 
 GDIPLUS_LIBS="$GDIPLUS_LIBS $CAIRO_LIBS $PANGO_LIBS"
 GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS $CAIRO_CFLAGS $PANGO_CFLAGS"
@@ -73,6 +105,8 @@ GDIPLUS_LIBS="$GDIPLUS_LIBS $FONTCONFIG_LIBS $FREETYPE2_LIBS"
 GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS $FONTCONFIG_CFLAGS $FREETYPE2_CFLAGS"
 
 AC_CHECK_HEADERS(byteswap.h)
+
+AC_SEARCH_LIBS(sqrt, m)
 
 AC_MSG_CHECKING([host threading settings])
 case "$host" in
@@ -107,11 +141,19 @@ case "$host" in
 		CFLAGS="-pthreads $CFLAGS"
 		;;
 
+	*-*-aix*|*-*-os400)
+		AC_DEFINE_UNQUOTED(AIX,1,[AIX or PASE])
+		# Specify a 64-bit build via GCC, as Mono is always 64-bit on AIX/PASE
+		CFLAGS="-D_THREAD_SAFE -maix64 $CFLAGS"
+		LDFLAGS="-maix64 $LDFLAGS"
+		# Like mono, don't use `OBJECT_MODE=64`, but specify 64-bit mode IBM binutils
+		# explictly instead.
+		AR="/usr/bin/ar -X64"
+		NM="/usr/bin/nm -X64"
+		;;
+
 	*-*-darwin*)
 		AC_DEFINE_UNQUOTED(OSX,1,[OS X])
-		CFLAGS="-no-cpp-precomp $CFLAGS"
-		LDFLAGS="-flat_namespace -undefined suppress $LDFLAGS"
-		no_x=yes
 		no_libpng16=yes # workaround until we can upgrade the libpng used by bockbuild
 		;;
 
@@ -178,6 +220,13 @@ case "$host" in
 		case $host_os in
 		  solaris*)
 			# On solaris 10 x86, gcc prints a warning saying 'visibility attribute not supported on this configuration; ignored', but linking fails.
+			have_visibility_hidden=no
+		esac
+		;;
+	powerpc-*-*)
+		case $host_os in
+		  aix*|os400*)
+			# XCOFF doesn't have this, but somehow it appears anyways
 			have_visibility_hidden=no
 		esac
 		;;
@@ -391,11 +440,17 @@ AC_ARG_WITH(x11,
 
 if test x$disable_x11 != xyes; then
   AC_MSG_CHECKING(X11 support)
-  AC_TRY_COMPILE(
-    [#include <X11/Xlib.h>],
-    [],
-    [x11_available=yes],
-    [x11_available=no])
+  if $PKG_CONFIG --exists x11 ; then
+    GDIPLUS_LIBS="$GDIPLUS_LIBS `$PKG_CONFIG --libs x11`"
+    GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS `$PKG_CONFIG --cflags x11`"
+    x11_available=yes
+  else
+    AC_TRY_COMPILE(
+      [#include <X11/Xlib.h>],
+      [],
+      [x11_available=yes],
+      [x11_available=no])
+  fi
 
   if test "x$x11_available" != "xyes"; then
     AC_MSG_ERROR( [ Failed to compile with X11/Xlib.h include. You must fix your compiler paths ])
@@ -406,17 +461,10 @@ else
   x11_available=no
 fi
 
-AS_IF(
-	[test x$x11_available = xyes],
-	[AC_DEFINE([HAS_X11], [1], [Define X11 support])],
-	[AC_DEFINE([HAS_X11], [0], [Skip X11 support])])
-AM_CONDITIONAL([HAS_X11], [test x$x11_available = xyes])
-
-# Add xrender here so that we don't fail to find glib if we won't have xrender.pc
-if test "x$no_x" != "xyes" && "x$x11_available" = "xyes"; then
-   GDIPLUS_LIBS="$GDIPLUS_LIBS `$PKG_CONFIG --libs xrender `"
-   GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS `$PKG_CONFIG --cflags xrender `"
+if test x$x11_available = xyes; then
+	AC_DEFINE(HAVE_X11, 1, Define if x11 is available.)
 fi
+AM_CONDITIONAL(HAVE_X11, test x$x11_available = xyes)
 
 dnl Test for libexif
 if test x$with_libexif != xno && test -z "$LIBEXIF"; then
@@ -441,7 +489,6 @@ AC_SUBST(GDIPLUS_CFLAGS)
 AC_SUBST(GDIPLUS_PKG_LIBS)
 AC_SUBST(GDIPLUS_PKG_CFLAGS)
 AC_SUBST(GDIPLUS_PKG_REQ)
-AC_SUBST(CAIRO_DIR)
 
 AC_OUTPUT([
 Makefile

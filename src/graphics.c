@@ -27,6 +27,7 @@
  */
 
 #include "graphics-private.h"
+#include "general-private.h"
 #include "graphics-cairo-private.h"
 #include "graphics-metafile-private.h"
 #include "region-private.h"
@@ -49,14 +50,14 @@ gdip_unit_conversion (Unit from, Unit to, float dpi, GraphicsType type, float nS
 
 	switch (from) {
 	case UnitDocument:
-      		inchs = nSrc / 300.0f;
-      		break;
-    	case UnitInch:
-      		inchs = nSrc;
-      		break;
-    	case UnitMillimeter:
-      		inchs = nSrc / 25.4f;
-      		break;
+		inchs = nSrc / 300.0f;
+		break;
+	case UnitInch:
+		inchs = nSrc;
+		break;
+	case UnitMillimeter:
+		inchs = nSrc / 25.4f;
+		break;
 	case UnitDisplay:
 		if (type == gtPostScript) { /* Uses 1/100th on printers */
 			inchs = nSrc / 100;
@@ -65,12 +66,12 @@ gdip_unit_conversion (Unit from, Unit to, float dpi, GraphicsType type, float nS
 		}
 		break;
 	case UnitPixel:
-    	case UnitWorld:
-      		inchs = nSrc / dpi;
-	      	break;
-    	case UnitPoint:
-      		inchs = nSrc / 72.0f;
-      		break;
+	case UnitWorld:
+		inchs = nSrc / dpi;
+		break;
+	case UnitPoint:
+		inchs = nSrc / 72.0f;
+		break;
 	case UnitCairoPoint:
 		if (type == gtPostScript) { /* Uses 1/100th on printers */
 			inchs = nSrc / 72.0f;
@@ -78,7 +79,7 @@ gdip_unit_conversion (Unit from, Unit to, float dpi, GraphicsType type, float nS
 			inchs = nSrc / dpi;
 		}
 		break;
-    	default:
+	default:
 		return nSrc;
 	}
 
@@ -144,6 +145,7 @@ gdip_graphics_common_init (GpGraphics *graphics)
 	GdipCreateRegion (&graphics->clip);
 	GdipCreateMatrix (&graphics->clip_matrix);
 	graphics->bounds.X = graphics->bounds.Y = graphics->bounds.Width = graphics->bounds.Height = 0;
+	graphics->orig_bounds.X = graphics->orig_bounds.Y = graphics->orig_bounds.Width = graphics->orig_bounds.Height = 0;
 	graphics->last_pen = NULL;
 	graphics->last_brush = NULL;
 	graphics->saved_status = NULL;
@@ -151,10 +153,11 @@ gdip_graphics_common_init (GpGraphics *graphics)
 	graphics->render_origin_x = 0;
 	graphics->render_origin_y = 0;
 	graphics->dpi_x = graphics->dpi_y = 0;
+	graphics->state = GraphicsStateValid;
 
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
-	graphics->display = NULL;
-	graphics->drawable = NULL;
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
+	graphics->display = (Display*)NULL;
+	graphics->drawable = (Drawable)NULL;
 #endif
 
 	gdip_graphics_reset (graphics);
@@ -169,9 +172,9 @@ gdip_graphics_cairo_init (GpGraphics *graphics, cairo_surface_t *surface)
 	graphics->ct = cairo_create (surface);
 
 #ifndef NO_CAIRO_AA
-        cairo_set_shape_format (graphics->ct, CAIRO_FORMAT_A1);
+		cairo_set_shape_format (graphics->ct, CAIRO_FORMAT_A1);
 #endif
-        /* cairo_select_font_face (graphics->ct, "serif:12"); */
+	/* cairo_select_font_face (graphics->ct, "serif:12"); */
 	cairo_select_font_face (graphics->ct, "serif:12", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
 	gdip_graphics_common_init (graphics);
@@ -216,12 +219,27 @@ GpStatus WINGDIPAPI
 GdipCreateFromHDC (HDC hdc, GpGraphics **graphics)
 {
 	GpGraphics *clone = (GpGraphics *)hdc;
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 	cairo_surface_t *surface;
 	int x, y;
 	unsigned int w, h, border_w, depth;
+#endif
+
+	if (!gdiplusInitialized)
+		return GdiplusNotInitialized;
+
+	if (!graphics)
+		return InvalidParameter;
 
 	if (!hdc)
 		return OutOfMemory;
+
+#if defined(WIN32)
+	// HDC returns to a device context. The remainer of this function assumes that hdc really
+	// is a GpGrahpics, but that's almost guaranteed to be not the case on Windows. Just fail
+	// quickly instead of segfauling.
+	return NotImplemented;
+#endif
 
 #ifdef CAIRO_HAS_PS_SURFACE
 
@@ -234,7 +252,7 @@ GdipCreateFromHDC (HDC hdc, GpGraphics **graphics)
 	if (clone->type == gtMemoryBitmap)
 		return GdipGetImageGraphicsContext (clone->image, graphics);
 
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 	Window root;
 	XGetGeometry (clone->display, clone->drawable, &root,
 		      &x, &y, &w, &h, &border_w, &depth);
@@ -244,8 +262,10 @@ GdipCreateFromHDC (HDC hdc, GpGraphics **graphics)
 	    w, h);
 			
 	*graphics = gdip_graphics_new (surface);
-	if (!*graphics)
+	if (!*graphics) {
+		cairo_surface_destroy (surface);
 		return OutOfMemory;
+	}
 
 	(*graphics)->dpi_x = (*graphics)->dpi_y = gdip_get_display_dpi ();
 	cairo_surface_destroy (surface);
@@ -265,6 +285,12 @@ GdipCreateFromHDC (HDC hdc, GpGraphics **graphics)
 GpStatus WINGDIPAPI
 GdipCreateFromHDC2 (HDC hdc, HANDLE hDevice, GpGraphics **graphics)
 {
+	if (!gdiplusInitialized)
+		return GdiplusNotInitialized;
+
+	if (!graphics)
+		return InvalidParameter;
+
 	if (hDevice)
 		return NotImplemented;
 
@@ -274,6 +300,9 @@ GdipCreateFromHDC2 (HDC hdc, HANDLE hDevice, GpGraphics **graphics)
 GpStatus WINGDIPAPI
 GdipCreateFromHWND (HWND hwnd, GpGraphics **graphics)
 {
+	if (!gdiplusInitialized)
+		return GdiplusNotInitialized;
+
 	if (!graphics)
 		return InvalidParameter;
 
@@ -283,10 +312,7 @@ GdipCreateFromHWND (HWND hwnd, GpGraphics **graphics)
 GpStatus WINGDIPAPI
 GdipCreateFromHWNDICM (HWND hwnd, GpGraphics **graphics)
 {
-	if (!graphics)
-		return InvalidParameter;
-
-	return NotImplemented;
+	return GdipCreateFromHWND (hwnd, graphics);
 }
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
@@ -301,12 +327,19 @@ GdipCreateFromContext_macosx (void *ctx, int width, int height, GpGraphics **gra
 
 	surface = cairo_quartz_surface_create (0, width, height);
 
-	*graphics = gdip_graphics_new(surface);
+	*graphics = gdip_graphics_new (surface);
+	if (!*graphics) {
+		cairo_surface_destroy (surface);
+		return OutOfMemory;
+	}
+
 	(*graphics)->dpi_x = (*graphics)->dpi_y = gdip_get_display_dpi ();
 	cairo_surface_destroy (surface);
 	
 	(*graphics)->bounds.Width = width;
 	(*graphics)->bounds.Height = height;
+	(*graphics)->orig_bounds.Width = width;
+	(*graphics)->orig_bounds.Height = height;
 
 	(*graphics)->type = gtOSXDrawable;
 	(*graphics)->cg_context = ctx;
@@ -316,7 +349,7 @@ GdipCreateFromContext_macosx (void *ctx, int width, int height, GpGraphics **gra
 
 #endif
 
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 
 // coverity[+alloc : arg-*2]
 GpStatus
@@ -325,7 +358,7 @@ GdipCreateFromXDrawable_linux(Drawable d, Display *dpy, GpGraphics **graphics)
 	Window root_ignore;
 	GpRect bounds;
 	int bwidth_ignore, depth_ignore;
-        cairo_surface_t *surface;
+	cairo_surface_t *surface;
 
 	if (!graphics)
 		return InvalidParameter;
@@ -340,6 +373,11 @@ GdipCreateFromXDrawable_linux(Drawable d, Display *dpy, GpGraphics **graphics)
 	
 	
 	*graphics = gdip_graphics_new(surface);
+	if (!*graphics) {
+		cairo_surface_destroy (surface);
+		return OutOfMemory;
+	}
+
 	(*graphics)->dpi_x = (*graphics)->dpi_y = gdip_get_display_dpi ();
 	cairo_surface_destroy (surface);
 
@@ -353,7 +391,7 @@ GdipCreateFromXDrawable_linux(Drawable d, Display *dpy, GpGraphics **graphics)
 
 #endif
 
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 static int
 ignore_error_handler (Display *dpy, XErrorEvent *event)
 {
@@ -366,6 +404,9 @@ GdipDeleteGraphics (GpGraphics *graphics)
 {
 	if (!graphics)
 		return InvalidParameter;
+
+	if (graphics->state != GraphicsStateValid)
+		return ObjectBusy;
 
 	/* We don't destroy image because we did not create one. */
 	if (graphics->copy_of_ctm) {
@@ -384,7 +425,7 @@ GdipDeleteGraphics (GpGraphics *graphics)
 	}
 
 	if (graphics->ct) {
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 		int (*old_error_handler)(Display *dpy, XErrorEvent *ev) = NULL;
 		if (graphics->type == gtX11Drawable)
 			old_error_handler = XSetErrorHandler (ignore_error_handler);
@@ -393,7 +434,7 @@ GdipDeleteGraphics (GpGraphics *graphics)
 		cairo_destroy (graphics->ct);
 		graphics->ct = NULL;
 
-#if HAS_X11 && CAIRO_HAS_XLIB_SURFACE
+#if defined(HAVE_X11) && CAIRO_HAS_XLIB_SURFACE
 		if (graphics->type == gtX11Drawable)
 			XSetErrorHandler (old_error_handler);
 #endif
@@ -427,37 +468,46 @@ GdipDeleteGraphics (GpGraphics *graphics)
 GpStatus WINGDIPAPI
 GdipGetDC (GpGraphics *graphics, HDC *hdc)
 {
-	/* For our gdi+ the hDC is equivalent to the graphics handle */
-	if (hdc) {
-		*hdc = (void *)graphics;
-	}
+	if (!graphics || !hdc)
+		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
+	*hdc = (void *)graphics;
+	graphics->state = GraphicsStateBusy;
+
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
 GdipReleaseDC (GpGraphics *graphics, HDC hdc)
 {
-	if (hdc != (void *)graphics) {
+	if (!graphics || !hdc || graphics->state != GraphicsStateBusy)
 		return InvalidParameter;
-	}
+
+	if (hdc != (void *)graphics)
+		return InvalidParameter;
+
+	graphics->state = GraphicsStateValid;
+
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
-GdipRestoreGraphics (GpGraphics *graphics, unsigned int graphicsState)
+GdipRestoreGraphics (GpGraphics *graphics, GraphicsState state)
 {
-	GpState* pos_state;
+	GpStatus status;
+	GpState *pos_state;
 
 	if (!graphics)
 		return InvalidParameter;
-	
-///printf("[%s %d] GdipRestoreGraphics called\n", __FILE__, __LINE__);
 
-	if (graphicsState >= MAX_GRAPHICS_STATE_STACK || graphicsState > graphics->saved_status_pos)
+	if (state <= 0 || (state - 1) >= MAX_GRAPHICS_STATE_STACK || (state - 1) > graphics->saved_status_pos)
 		return InvalidParameter;
 
 	pos_state = graphics->saved_status;
-	pos_state += graphicsState;	
+	pos_state += (state - 1);	
 
 	/* Save from GpState to Graphics  */
 	gdip_cairo_matrix_copy (graphics->copy_of_ctm, &pos_state->matrix);
@@ -467,7 +517,10 @@ GdipRestoreGraphics (GpGraphics *graphics, unsigned int graphicsState)
 
 	if (graphics->clip)
 		GdipDeleteRegion (graphics->clip);
-	GdipCloneRegion (pos_state->clip, &graphics->clip);
+	status = GdipCloneRegion (pos_state->clip, &graphics->clip);
+	if (status != Ok)
+		return status;
+
 	gdip_cairo_matrix_copy (graphics->clip_matrix, &pos_state->clip_matrix);
 
 	graphics->composite_mode = pos_state->composite_mode;
@@ -480,10 +533,10 @@ GdipRestoreGraphics (GpGraphics *graphics, unsigned int graphicsState)
 	graphics->pixel_mode = pos_state->pixel_mode;
 	graphics->text_contrast = pos_state->text_contrast;
 
-	graphics->saved_status_pos = graphicsState;
+	graphics->saved_status_pos = state;
 
 	/* re-adjust clipping (region and matrix) */
-	cairo_set_matrix (graphics->ct, graphics->copy_of_ctm);
+	gdip_cairo_set_matrix (graphics, graphics->copy_of_ctm);
 
 	/* GdipCloneRegion was called, but for some reason, not registred as an allocation */
 	/* coverity[freed_arg] */
@@ -491,16 +544,19 @@ GdipRestoreGraphics (GpGraphics *graphics, unsigned int graphicsState)
 }
 
 GpStatus WINGDIPAPI
-GdipSaveGraphics (GpGraphics *graphics, unsigned int *state)
+GdipSaveGraphics (GpGraphics *graphics, GraphicsState *state)
 {
+	GpStatus status;
 	GpState* pos_state;
 
 	if (!graphics || !state)
 		return InvalidParameter;
 
-///printf("[%s %d] GdipSaveGraphics called\n", __FILE__, __LINE__);
-	if (graphics->saved_status == NULL) {
+	if (!graphics->saved_status) {
 		graphics->saved_status = gdip_calloc (MAX_GRAPHICS_STATE_STACK, sizeof (GpState));
+		if (!graphics->saved_status)
+			return OutOfMemory;
+
 		graphics->saved_status_pos = 0;
 	}
 
@@ -518,7 +574,10 @@ GdipSaveGraphics (GpGraphics *graphics, unsigned int *state)
 
 	if (pos_state->clip)
 		GdipDeleteRegion (pos_state->clip);
-	GdipCloneRegion (graphics->clip, &pos_state->clip);
+	status = GdipCloneRegion (graphics->clip, &pos_state->clip);
+	if (status != Ok)
+		return status;
+
 	gdip_cairo_matrix_copy (&pos_state->clip_matrix, graphics->clip_matrix);
 
 	pos_state->composite_mode = graphics->composite_mode;
@@ -531,97 +590,21 @@ GdipSaveGraphics (GpGraphics *graphics, unsigned int *state)
 	pos_state->pixel_mode = graphics->pixel_mode;
 	pos_state->text_contrast = graphics->text_contrast;
 	
-	*state = graphics->saved_status_pos;
+	*state = graphics->saved_status_pos + 1; // make sure GraphicsState is non-zero for compat with GDI+
 	graphics->saved_status_pos++;
 	return Ok;
 }
 
-GpStatus WINGDIPAPI
-GdipResetWorldTransform (GpGraphics *graphics)
-{
-	if (!graphics)
-		return InvalidParameter;
-
-	cairo_matrix_init_identity (graphics->copy_of_ctm);
-	cairo_matrix_init_identity (graphics->clip_matrix);
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_ResetWorldTransform (graphics);
-	case GraphicsBackEndMetafile:
-		return metafile_ResetWorldTransform (graphics);
-	default:
-		return GenericError;
-	}
-}
-
-GpStatus WINGDIPAPI
-GdipSetWorldTransform (GpGraphics *graphics, GpMatrix *matrix)
-{
-	GpStatus status;
-	BOOL invertible;
-
-	if (!graphics || !matrix)
-		return InvalidParameter;
-
-	/* optimization - inverting an identity matrix result in the identity matrix */
-	if (gdip_is_matrix_empty (matrix))
-		return GdipResetWorldTransform (graphics);
-
-	/* the matrix MUST be invertible to be used */
-	status = GdipIsMatrixInvertible (matrix, &invertible);
-	if (!invertible || (status != Ok))
-		return InvalidParameter;
-
-	gdip_cairo_matrix_copy (graphics->copy_of_ctm, matrix);
-	gdip_cairo_matrix_copy (graphics->clip_matrix, matrix);
-
-	/* we already know it's invertible */
-	GdipInvertMatrix (graphics->clip_matrix);
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_SetWorldTransform (graphics, matrix);
-	case GraphicsBackEndMetafile:
-		return metafile_SetWorldTransform (graphics, matrix);
-	default:
-		return GenericError;
-	}
-}
-
-GpStatus WINGDIPAPI
-GdipGetWorldTransform (GpGraphics *graphics, GpMatrix *matrix)
-{
-	if (!graphics || !matrix)
-		return InvalidParameter;
-
-	/* get the effective matrix from cairo */
-	gdip_cairo_matrix_copy (matrix, graphics->copy_of_ctm);
-
-	/* if we're inside a container then the previous matrix are hidden */
-	if (!gdip_is_matrix_empty (&graphics->previous_matrix)) {
-		cairo_matrix_t inverted;
-		/* substract the previous matrix from the effective matrix */
-		gdip_cairo_matrix_copy (&inverted, &graphics->previous_matrix);
-		cairo_matrix_invert (&inverted);
-		return GdipMultiplyMatrix (matrix, &inverted, MatrixOrderAppend);
-	}
-        return Ok;
-}
-
-static GpStatus
+static void
 apply_world_to_bounds (GpGraphics *graphics)
 {
-	GpStatus status;
 	GpPointF pts[2];
 
-	pts[0].X = graphics->bounds.X;
-	pts[0].Y = graphics->bounds.Y;
-	pts[1].X = graphics->bounds.X + graphics->bounds.Width;
-	pts[1].Y = graphics->bounds.Y + graphics->bounds.Height;
-	status = GdipTransformMatrixPoints (graphics->clip_matrix, (GpPointF*)&pts, 2);
-	if (status != Ok)
-		return status;
+	pts[0].X = graphics->orig_bounds.X;
+	pts[0].Y = graphics->orig_bounds.Y;
+	pts[1].X = graphics->orig_bounds.X + graphics->orig_bounds.Width;
+	pts[1].Y = graphics->orig_bounds.Y + graphics->orig_bounds.Height;
+	GdipTransformMatrixPoints (graphics->clip_matrix, pts, 2);
 
 	if (pts[0].X > pts[1].X) {
 		graphics->bounds.X = pts[1].X;
@@ -637,13 +620,110 @@ apply_world_to_bounds (GpGraphics *graphics)
 		graphics->bounds.Y = pts[0].Y;
 		graphics->bounds.Height = iround (pts[1].Y - pts[0].Y);
 	}
+}
+
+GpStatus WINGDIPAPI
+GdipResetWorldTransform (GpGraphics *graphics)
+{
+	if (!graphics)
+		return InvalidParameter;
+
+	if (!gdip_is_matrix_empty (&graphics->previous_matrix)) {
+		/* inside a container only reset to the previous transform */
+		gdip_cairo_matrix_copy (graphics->copy_of_ctm, &graphics->previous_matrix);
+		gdip_cairo_matrix_copy (graphics->clip_matrix, &graphics->previous_matrix);
+		GdipInvertMatrix (graphics->clip_matrix);
+	} else {
+		cairo_matrix_init_identity (graphics->copy_of_ctm);
+		cairo_matrix_init_identity (graphics->clip_matrix);
+	}
+
+	apply_world_to_bounds (graphics);
+
+	switch (graphics->backend) {
+	case GraphicsBackEndCairo:
+		return cairo_ResetWorldTransform (graphics);
+	case GraphicsBackEndMetafile:
+		return metafile_ResetWorldTransform (graphics);
+	default:
+		return GenericError;
+	}
+}
+
+GpStatus WINGDIPAPI
+GdipSetWorldTransform (GpGraphics *graphics, GpMatrix *matrix)
+{
+	BOOL invertible;
+
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!matrix)
+		return InvalidParameter;
+
+	// Inverting an identity matrix result in the identity matrix.
+	if (gdip_is_matrix_empty (matrix))
+		return GdipResetWorldTransform (graphics);
+
+	// The matrix must be invertible to be used.
+	GdipIsMatrixInvertible (matrix, &invertible);
+	if (!invertible)
+		return InvalidParameter;
+
+	GpMatrix matrixCopy;
+	gdip_cairo_matrix_copy (&matrixCopy, matrix);
+	
+	if (!gdip_is_matrix_empty (&graphics->previous_matrix)) {
+		/* inside a container the transform is appended to the previous transform */
+		GdipMultiplyMatrix (&matrixCopy, &graphics->previous_matrix, MatrixOrderAppend);
+	}
+	
+	gdip_cairo_matrix_copy (graphics->copy_of_ctm, &matrixCopy);
+	gdip_cairo_matrix_copy (graphics->clip_matrix, &matrixCopy);
+	
+	/* we already know it's invertible */
+	GdipInvertMatrix (graphics->clip_matrix);
+
+	apply_world_to_bounds (graphics);
+
+	switch (graphics->backend) {
+	case GraphicsBackEndCairo:
+		return cairo_SetWorldTransform (graphics, &matrixCopy);
+	case GraphicsBackEndMetafile:
+		return metafile_SetWorldTransform (graphics, &matrixCopy);
+	default:
+		return GenericError;
+	}
+}
+
+GpStatus WINGDIPAPI
+GdipGetWorldTransform (GpGraphics *graphics, GpMatrix *matrix)
+{
+	if (!graphics || !matrix)
+		return InvalidParameter;
+	
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
+	/* get the effective matrix from cairo */
+	gdip_cairo_matrix_copy (matrix, graphics->copy_of_ctm);
+
+	/* if we're inside a container then the previous matrix are hidden */
+	if (!gdip_is_matrix_empty (&graphics->previous_matrix)) {
+		cairo_matrix_t inverted;
+		/* substract the previous matrix from the effective matrix */
+		gdip_cairo_matrix_copy (&inverted, &graphics->previous_matrix);
+		cairo_matrix_invert (&inverted);
+		return GdipMultiplyMatrix (matrix, &inverted, MatrixOrderAppend);
+	}
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
 GdipMultiplyWorldTransform (GpGraphics *graphics, GpMatrix *matrix, GpMatrixOrder order)
 {
-        GpStatus s;
+	GpStatus s;
 	BOOL invertible;
 	GpMatrix inverted;
 
@@ -656,14 +736,14 @@ GdipMultiplyWorldTransform (GpGraphics *graphics, GpMatrix *matrix, GpMatrixOrde
 		return InvalidParameter;
 
 	s = GdipMultiplyMatrix (graphics->copy_of_ctm, matrix, order);
-        if (s != Ok)
-                return s;
+	if (s != Ok)
+		return s;
 
 	/* Multiply the inverted matrix with the clipping matrix */
 	gdip_cairo_matrix_copy (&inverted, matrix);
 	s = GdipInvertMatrix (&inverted);
-        if (s != Ok)
-                return s;
+	if (s != Ok)
+		return s;
 
 	s = GdipMultiplyMatrix (graphics->clip_matrix, &inverted, order);
 	if (s != Ok)
@@ -683,16 +763,19 @@ GdipMultiplyWorldTransform (GpGraphics *graphics, GpMatrix *matrix, GpMatrixOrde
 }
 
 GpStatus WINGDIPAPI
-GdipRotateWorldTransform (GpGraphics *graphics, float angle, GpMatrixOrder order)
+GdipRotateWorldTransform (GpGraphics *graphics, REAL angle, GpMatrixOrder order)
 {
 	GpStatus s;
 
 	if (!graphics)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	s = GdipRotateMatrix (graphics->copy_of_ctm, angle, order);
-        if (s != Ok)
-                return s;
+		if (s != Ok)
+				return s;
 
 	s = GdipRotateMatrix (graphics->clip_matrix, -angle, gdip_matrix_reverse_order (order));
 	if (s != Ok)
@@ -712,16 +795,16 @@ GdipRotateWorldTransform (GpGraphics *graphics, float angle, GpMatrixOrder order
 }
 
 GpStatus WINGDIPAPI
-GdipScaleWorldTransform (GpGraphics *graphics, float sx, float sy, GpMatrixOrder order)
+GdipScaleWorldTransform (GpGraphics *graphics, REAL sx, REAL sy, GpMatrixOrder order)
 {
 	GpStatus s;
 
 	if (!graphics || (sx == 0.0f) || (sy == 0.0f))
 		return InvalidParameter;
 
-        s = GdipScaleMatrix (graphics->copy_of_ctm, sx, sy, order);
-        if (s != Ok)
-                return s;
+	s = GdipScaleMatrix (graphics->copy_of_ctm, sx, sy, order);
+	if (s != Ok)
+		return s;
 
 	s = GdipScaleMatrix (graphics->clip_matrix, (1.0f / sx), (1.0f / sy), gdip_matrix_reverse_order (order));
 	if (s != Ok)
@@ -741,16 +824,16 @@ GdipScaleWorldTransform (GpGraphics *graphics, float sx, float sy, GpMatrixOrder
 }
 
 GpStatus WINGDIPAPI
-GdipTranslateWorldTransform (GpGraphics *graphics, float dx, float dy, GpMatrixOrder order)
+GdipTranslateWorldTransform (GpGraphics *graphics, REAL dx, REAL dy, GpMatrixOrder order)
 {
 	GpStatus s;
 
 	if (!graphics)
 		return InvalidParameter;
 
-        s = GdipTranslateMatrix (graphics->copy_of_ctm, dx, dy, order);
-        if (s != Ok) 
-                return s;
+	s = GdipTranslateMatrix (graphics->copy_of_ctm, dx, dy, order);
+	if (s != Ok) 
+		return s;
 
 	s = GdipTranslateMatrix (graphics->clip_matrix, -dx, -dy, gdip_matrix_reverse_order (order));
 	if (s != Ok)
@@ -776,7 +859,11 @@ GdipTranslateWorldTransform (GpGraphics *graphics, float dx, float dy, GpMatrixO
 GpStatus WINGDIPAPI
 GdipDrawArc (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !pen)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || width <= 0 || height <= 0)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -792,60 +879,42 @@ GdipDrawArc (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL 
 GpStatus WINGDIPAPI
 GdipDrawArcI (GpGraphics *graphics, GpPen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawArcI (graphics, pen, x, y, width, height, startAngle, sweepAngle);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawArcI (graphics, pen, x, y, width, height, startAngle, sweepAngle);
-	default:
-		return GenericError;
-	}
+	return GdipDrawArc (graphics, pen, x, y, width, height, startAngle, sweepAngle);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawBezier (GpGraphics *graphics, GpPen *pen, REAL x1, REAL y1, REAL x2, REAL y2, REAL x3, REAL y3,
 	REAL x4, REAL y4)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawBezier (graphics, pen, x1, y1, x2, y2, x3, y3, x4, y4);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawBezier (graphics, pen, x1, y1, x2, y2, x3, y3, x4, y4);
-	default:
-		return GenericError;
-	}
+	PointF points[4] = {
+		{x1, y1},
+		{x2, y2},
+		{x3, y3},
+		{x4, y4}
+	};
+	
+	return GdipDrawBeziers (graphics, pen, points, 4);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawBezierI (GpGraphics *graphics, GpPen *pen, INT x1, INT y1, INT x2, INT y2, INT x3, INT y3, INT x4, INT y4)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawBezierI (graphics, pen, x1, y1, x2, y2, x3, y3, x4, y4);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawBezierI (graphics, pen, x1, y1, x2, y2, x3, y3, x4, y4);
-	default:
-		return GenericError;
-	}
+	return GdipDrawBezier (graphics, pen, x1, y1, x2, y2, x3, y3, x4, y4);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawBeziers (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count)
 {
-	if (count == 0)
-		return Ok;
-
-	if (!graphics || !pen || !points)
+	if (!graphics || !points || count <= 0 || (count > 3 && (count % 3) != 1))
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen)
+		return InvalidParameter;
+
+	// Nop if the count is too small to fit any bezier paths.
+	if (count < 3)
+		return Ok;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
@@ -860,28 +929,32 @@ GdipDrawBeziers (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, I
 GpStatus WINGDIPAPI
 GdipDrawBeziersI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count)
 {
-	if (count == 0)
-		return Ok;
-
-	if (!graphics || !pen || !points)
+	GpStatus status;
+	GpPointF *pointsF;
+	
+	if (!points || count < 0)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawBeziersI (graphics, pen, points, count);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawBeziersI (graphics, pen, points, count);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipDrawBeziers (graphics, pen, pointsF, count);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawEllipse (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL height)
 {	
-	if (!graphics || !pen)
+	if (!graphics)
 		return InvalidParameter;
-	
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen)
+		return InvalidParameter;
+
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
 		return cairo_DrawEllipse (graphics, pen, x, y, width, height);
@@ -895,55 +968,33 @@ GdipDrawEllipse (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, R
 GpStatus WINGDIPAPI
 GdipDrawEllipseI (GpGraphics *graphics, GpPen *pen, INT x, INT y, INT width, INT height)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawEllipseI (graphics, pen, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawEllipseI (graphics, pen, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	return GdipDrawEllipse (graphics, pen, x, y, width, height);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawLine (GpGraphics *graphics, GpPen *pen, REAL x1, REAL y1, REAL x2, REAL y2)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawLine (graphics, pen, x1, y1, x2, y2);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawLine (graphics, pen, x1, y1, x2, y2);
-	default:
-		return GenericError;
-	}
+	PointF points[2] = {
+		{x1, y1},
+		{x2, y2}
+	};
+	return GdipDrawLines (graphics, pen, points, 2);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawLineI (GpGraphics *graphics, GpPen *pen, INT x1, INT y1, INT x2, INT y2)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawLineI (graphics, pen, x1, y1, x2, y2);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawLineI (graphics, pen, x1, y1, x2, y2);
-	default:
-		return GenericError;
-	}
+	return GdipDrawLine (graphics, pen, x1, y1, x2, y2);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawLines (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count)
 {
-	if (!graphics || !pen || !points || count < 2)
+	if (!graphics || !points || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || count < 2)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -959,23 +1010,32 @@ GdipDrawLines (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT
 GpStatus WINGDIPAPI
 GdipDrawLinesI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count)
 {
-	if (!graphics || !pen || !points || count < 2)
+	GpStatus status;
+	GpPointF *pointsF;
+
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawLinesI (graphics, pen, points, count);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawLinesI (graphics, pen, points, count);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipDrawLines (graphics, pen, pointsF, count);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawPath (GpGraphics *graphics, GpPen *pen, GpPath *path)
 {
-	if (!graphics || !pen || !path)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || !path)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -991,7 +1051,11 @@ GdipDrawPath (GpGraphics *graphics, GpPen *pen, GpPath *path)
 GpStatus WINGDIPAPI
 GdipDrawPie (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !pen)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || width <= 0 || height <= 0)
 		return InvalidParameter;
 
 	/* We don't do anything, if sweep angle is zero. */
@@ -1011,27 +1075,17 @@ GdipDrawPie (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL 
 GpStatus WINGDIPAPI
 GdipDrawPieI (GpGraphics *graphics, GpPen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	/* We don't do anything, if sweep angle is zero. */
-	if (sweepAngle == 0)
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawPieI (graphics, pen, x, y, width, height, startAngle, sweepAngle);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawPieI (graphics, pen, x, y, width, height, startAngle, sweepAngle);
-	default:
-		return GenericError;
-	}
+	return GdipDrawPie (graphics, pen, x, y, width, height, startAngle, sweepAngle);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawPolygon (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count)
 {
-	if (!graphics || !pen || !points || count < 2)
+	if (!graphics || !points || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || count < 2)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -1047,63 +1101,45 @@ GdipDrawPolygon (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, I
 GpStatus WINGDIPAPI
 GdipDrawPolygonI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count)
 {
-	if (!graphics || !pen || !points || count < 2)
+	GpStatus status;
+	GpPointF *pointsF;
+
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawPolygonI (graphics, pen, points, count);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawPolygonI (graphics, pen, points, count);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipDrawPolygon (graphics, pen, pointsF, count);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawRectangle (GpGraphics *graphics, GpPen *pen, REAL x, REAL y, REAL width, REAL height)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	/* don't draw/fill rectangles with negative width/height (bug #77129) */
-	if ((width < 0) || (height < 0))
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawRectangle (graphics, pen, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawRectangle (graphics, pen, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	RectF rect = {x, y, width, height};
+	return GdipDrawRectangles (graphics, pen, &rect, 1);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawRectangleI (GpGraphics *graphics, GpPen *pen, INT x, INT y, INT width, INT height)
 {
-	if (!graphics || !pen)
-		return InvalidParameter;
-
-	/* don't draw/fill rectangles with negative width/height (bug #77129) */
-	if ((width < 0) || (height < 0))
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawRectangle (graphics, pen, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawRectangle (graphics, pen, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	return GdipDrawRectangle (graphics, pen, x, y, width, height);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawRectangles (GpGraphics *graphics, GpPen *pen, GDIPCONST GpRectF *rects, INT count)
 {
-	if (!graphics || !pen || !rects || count <= 0)
+	if (!graphics || !rects || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen)
 		return InvalidParameter;
 	
 	switch (graphics->backend) {
@@ -1119,40 +1155,47 @@ GdipDrawRectangles (GpGraphics *graphics, GpPen *pen, GDIPCONST GpRectF *rects, 
 GpStatus WINGDIPAPI
 GdipDrawRectanglesI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpRect *rects, INT count)
 {
-	if (!graphics || !pen || !rects || count <= 0)
+	GpStatus status;
+	GpRectF *rectsF;
+
+	if (!rects || count < 0)
 		return InvalidParameter;
 	
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawRectanglesI (graphics, pen, rects, count);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawRectanglesI (graphics, pen, rects, count);
-	default:
-		return GenericError;
-	}
+	rectsF = convert_rects (rects, count);
+	if (!rectsF)
+		return OutOfMemory;
+
+	status = GdipDrawRectangles (graphics, pen, rectsF, count);
+
+	GdipFree (rectsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawClosedCurve (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count)
 {
-        return GdipDrawClosedCurve2 (graphics, pen, points, count, 0.5f);
+	return GdipDrawClosedCurve2 (graphics, pen, points, count, 0.5f);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawClosedCurveI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count)
 {
-        return GdipDrawClosedCurve2I (graphics, pen, points, count, 0.5f);
+	return GdipDrawClosedCurve2I (graphics, pen, points, count, 0.5f);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawClosedCurve2 (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count, REAL tension)
 {
+	if (!graphics || !points || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || count < 3)
+		return InvalidParameter;
+
 	/* when tension is 0, draw straight lines */
 	if (tension == 0)
 		return GdipDrawPolygon (graphics, pen, points, count);
-
-	if (!graphics || !pen || !points || count <= 2)
-		return InvalidParameter;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
@@ -1167,83 +1210,81 @@ GdipDrawClosedCurve2 (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *poin
 GpStatus WINGDIPAPI
 GdipDrawClosedCurve2I (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count, REAL tension)
 {
-	/* when tension is 0, draw straight lines */
-	if (tension == 0)
-		return GdipDrawPolygonI (graphics, pen, points, count);
+	GpStatus status;
+	GpPointF *pointsF;
 
-	if (!graphics || !pen || !points || count <= 2)
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawClosedCurve2I (graphics, pen, points, count, tension);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawClosedCurve2I (graphics, pen, points, count, tension);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipDrawClosedCurve2 (graphics, pen, pointsF, count, tension);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawCurve (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPointF *points, INT count)
 {
-	if (count == 2) {
-		return GdipDrawLines (graphics, pen, points, count);
-	} else {
-		int segments = (count > 3) ? (count - 1) : (count - 2);
-	        return GdipDrawCurve3 (graphics, pen, points, count, 0, segments, 0.5f);
-	}
+	return GdipDrawCurve2 (graphics, pen, points, count, 0.5f);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawCurveI (GpGraphics *graphics, GpPen *pen, GDIPCONST GpPoint *points, INT count)
 {
-	if (count == 2) {
-		return GdipDrawLinesI (graphics, pen, points, count);
-	} else {
-		int segments = (count > 3) ? (count - 1) : (count - 2);
-	        return GdipDrawCurve3I (graphics, pen, points, count, 0, segments, 0.5f);
-	}
+	return GdipDrawCurve2I (graphics, pen, points, count, 0.5f);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawCurve2 (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPointF *points, INT count, REAL tension)
 {
-	if (count == 2) {
+	if (count == 2)
 		return GdipDrawLines (graphics, pen, points, count);
-	} else {
-		int segments = (count > 3) ? (count - 1) : (count - 2);
-	        return GdipDrawCurve3 (graphics, pen, points, count, 0, segments, tension);
-	}
+
+	return GdipDrawCurve3 (graphics, pen, points, count, 0, count - 1, tension);
 }
 
 GpStatus WINGDIPAPI
 GdipDrawCurve2I (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPoint *points, INT count, REAL tension)
 {
-	if (count == 2) {
-		return GdipDrawLinesI (graphics, pen, points, count);
-	} else {
-		int segments = (count > 3) ? (count - 1) : (count - 2);
-	        return GdipDrawCurve3I (graphics, pen, points, count, 0, segments, tension);
-	}
+	GpStatus status;
+	GpPointF *pointsF;
+
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
+		return InvalidParameter;
+
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipDrawCurve2 (graphics, pen, pointsF, count, tension);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipDrawCurve3 (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPointF *points, INT count, INT offset, INT numOfSegments, REAL tension)
 {
+	if (!graphics || !points || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!pen || count < 2 || offset < 0 || offset >= count)
+		return InvalidParameter;
+	if (numOfSegments < 1 || numOfSegments >= count - offset)
+		return InvalidParameter;
+
 	/* draw lines if tension = 0 */
 	if (tension == 0)
 		return GdipDrawLines (graphics, pen, points, count);
-
-	if (!graphics || !pen || !points || numOfSegments < 1)
-		return InvalidParameter;
-
-	/* we need 3 points for the first curve, 2 more for each curves */
-	/* and it's possible to use a point prior to the offset (to calculate) */
-	if ((offset == 0) && (numOfSegments == 1) && (count < 3))
-		return InvalidParameter;
-	else if (numOfSegments >= count - offset)
-		return InvalidParameter;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
@@ -1258,28 +1299,22 @@ GdipDrawCurve3 (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPointF *points, IN
 GpStatus WINGDIPAPI
 GdipDrawCurve3I (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPoint *points, INT count, INT offset, INT numOfSegments, REAL tension)
 {
-	/* draw lines if tension = 0 */
-	if (tension == 0)
-		return GdipDrawLinesI (graphics, pen, points, count);
+	GpStatus status;
+	GpPointF *pointsF;
 
-	if (!graphics || !pen || !points || numOfSegments < 1)
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	/* we need 3 points for the first curve, 2 more for each curves */
-	/* and it's possible to use a point prior to the offset (to calculate) */
-	if ((offset == 0) && (numOfSegments == 1) && (count < 3))
-		return InvalidParameter;
-	else if (numOfSegments >= count - offset)
-		return InvalidParameter;
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_DrawCurve3I (graphics, pen, points, count, offset, numOfSegments, tension);
-	case GraphicsBackEndMetafile:
-		return metafile_DrawCurve3I (graphics, pen, points, count, offset, numOfSegments, tension);
-	default:
-		return GenericError;
-	}
+	status = GdipDrawCurve3 (graphics, pen, pointsF, count, offset, numOfSegments, tension);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 /*
@@ -1288,7 +1323,11 @@ GdipDrawCurve3I (GpGraphics *graphics, GpPen* pen, GDIPCONST GpPoint *points, IN
 GpStatus WINGDIPAPI
 GdipFillEllipse (GpGraphics *graphics, GpBrush *brush, REAL x, REAL y, REAL width, REAL height)
 {
-	if (!graphics || !brush)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -1304,63 +1343,30 @@ GdipFillEllipse (GpGraphics *graphics, GpBrush *brush, REAL x, REAL y, REAL widt
 GpStatus WINGDIPAPI
 GdipFillEllipseI (GpGraphics *graphics, GpBrush *brush, INT x, INT y, INT width, INT height)
 {
-	if (!graphics || !brush)
-		return InvalidParameter;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillEllipseI (graphics, brush, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_FillEllipseI (graphics, brush, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	return GdipFillEllipse (graphics, brush, x, y, width, height);
 }
 
 GpStatus WINGDIPAPI
 GdipFillRectangle (GpGraphics *graphics, GpBrush *brush, REAL x, REAL y, REAL width, REAL height)
 {
-	if (!graphics || !brush)
-		return InvalidParameter;
-
-	/* don't draw/fill rectangles with negative width/height (bug #77129) */
-	if ((width < 0) || (height < 0))
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillRectangle (graphics, brush, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_FillRectangle (graphics, brush, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	RectF rect = {x, y, width, height};
+	return GdipFillRectangles (graphics, brush, &rect, 1);
 }
 
 GpStatus WINGDIPAPI
 GdipFillRectangleI (GpGraphics *graphics, GpBrush *brush, INT x, INT y, INT width, INT height)
 {
-	if (!graphics || !brush)
-		return InvalidParameter;
-
-	/* don't draw/fill rectangles with negative width/height (bug #77129) */
-	if ((width < 0) || (height < 0))
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillRectangleI (graphics, brush, x, y, width, height);
-	case GraphicsBackEndMetafile:
-		return metafile_FillRectangleI (graphics, brush, x, y, width, height);
-	default:
-		return GenericError;
-	}
+	return GdipFillRectangle (graphics, brush, x, y, width, height);
 }
 
 GpStatus WINGDIPAPI
 GdipFillRectangles (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpRectF *rects, INT count)
 {
-	if (!graphics || !brush || !rects || count <= 0)
+	if (!graphics || !rects || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -1376,27 +1382,36 @@ GdipFillRectangles (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpRectF *rec
 GpStatus WINGDIPAPI
 GdipFillRectanglesI (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpRect *rects, INT count)
 {
-	if (!graphics || !brush || !rects || count <= 0)
+	GpStatus status;
+	GpRectF *rectsF;
+
+	if (count < 0)
+		return OutOfMemory;
+	if (!rects)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillRectanglesI (graphics, brush, rects, count);
-	case GraphicsBackEndMetafile:
-		return metafile_FillRectanglesI (graphics, brush, rects, count);
-	default:
-		return GenericError;
-	}
+	rectsF = convert_rects (rects, count);
+	if (!rectsF)
+		return OutOfMemory;
+
+	status = GdipFillRectangles (graphics, brush, rectsF, count);
+
+	GdipFree (rectsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipFillPie (GpGraphics *graphics, GpBrush *brush, REAL x, REAL y, REAL width, REAL height,
 	REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !brush)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush || width <= 0 || height <= 0)
 		return InvalidParameter;
 
-	/* We don't do anything, if sweep angle is zero. */
+	// Don't do anything if sweep angle is zero.
 	if (sweepAngle == 0)
 		return Ok;
 
@@ -1413,27 +1428,17 @@ GdipFillPie (GpGraphics *graphics, GpBrush *brush, REAL x, REAL y, REAL width, R
 GpStatus WINGDIPAPI
 GdipFillPieI (GpGraphics *graphics, GpBrush *brush, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
 {
-	if (!graphics || !brush)
-		return InvalidParameter;
-
-	/* We don't do anything, if sweep angle is zero. */
-	if (sweepAngle == 0)
-		return Ok;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillPieI (graphics, brush, x, y, width, height, startAngle, sweepAngle);
-	case GraphicsBackEndMetafile:
-		return metafile_FillPieI (graphics, brush, x, y, width, height, startAngle, sweepAngle);
-	default:
-		return GenericError;
-	}
+	return GdipFillPie (graphics, brush, x, y, width, height, startAngle, sweepAngle);
 }
 
 GpStatus WINGDIPAPI
 GdipFillPath (GpGraphics *graphics, GpBrush *brush, GpPath *path)
 {
-	if (!graphics || !brush || !path)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush || !path)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -1447,10 +1452,18 @@ GdipFillPath (GpGraphics *graphics, GpBrush *brush, GpPath *path)
 }
 
 GpStatus WINGDIPAPI
-GdipFillPolygon (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count, FillMode fillMode)
+GdipFillPolygon (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count, GpFillMode fillMode)
 {
-	if (!graphics || !brush || !points)
+	if (!graphics || !points || count <= 0)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush || fillMode > FillModeWinding)
+		return InvalidParameter;
+
+	// Don't do anything if sweep angle is zero.
+	if (count < 2)
+		return Ok;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
@@ -1463,89 +1476,106 @@ GdipFillPolygon (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *point
 }
 
 GpStatus WINGDIPAPI
-GdipFillPolygonI (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count, FillMode fillMode)
+GdipFillPolygonI (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count, GpFillMode fillMode)
 {
-	if (!graphics || !brush || !points)
+	GpStatus status;
+	GpPointF *pointsF;
+
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillPolygonI (graphics, brush, points, count, fillMode);
-	case GraphicsBackEndMetafile:
-		return metafile_FillPolygonI (graphics, brush, points, count, fillMode);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipFillPolygon (graphics, brush, pointsF, count, fillMode);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipFillPolygon2 (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count)
 {
-        return GdipFillPolygon (graphics, brush, points, count, FillModeAlternate);
+	return GdipFillPolygon (graphics, brush, points, count, FillModeAlternate);
 }
 
 GpStatus WINGDIPAPI
 GdipFillPolygon2I (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count)
 {
-        return GdipFillPolygonI (graphics, brush, points, count, FillModeAlternate);
+	return GdipFillPolygonI (graphics, brush, points, count, FillModeAlternate);
 }
 
 GpStatus WINGDIPAPI
 GdipFillClosedCurve (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count)
 {
-        return GdipFillClosedCurve2 (graphics, brush, points, count, 0.5f);
+	return GdipFillClosedCurve2 (graphics, brush, points, count, 0.5f, FillModeAlternate);
 }
 
 GpStatus WINGDIPAPI
 GdipFillClosedCurveI (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count)
 {
-        return GdipFillClosedCurve2I (graphics, brush, points, count, 0.5f);
+	return GdipFillClosedCurve2I (graphics, brush, points, count, 0.5f, FillModeAlternate);
 }
 
 GpStatus WINGDIPAPI
-GdipFillClosedCurve2 (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count, REAL tension)
+GdipFillClosedCurve2 (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPointF *points, INT count, REAL tension, GpFillMode fillMode)
 {
-        /* when tension is 0, the edges are straight lines */
-        if (tension == 0)
-                return GdipFillPolygon2 (graphics, brush, points, count);
+	if (!graphics || !points || count <= 0)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!brush || fillMode > FillModeWinding)
+		return InvalidParameter;
+	
+	// Nop if the count is too small.
+	if (count < 3)
+		return Ok;
 
-	if (!graphics || !brush || !points || count <= 0)
+	/* when tension is 0, the edges are straight lines */
+	if (tension == 0)
+		return GdipFillPolygon2 (graphics, brush, points, count);
+
+	if (!graphics || !brush || !points)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
-		return cairo_FillClosedCurve2 (graphics, brush, points, count, tension);
+		return cairo_FillClosedCurve2 (graphics, brush, points, count, tension, fillMode);
 	case GraphicsBackEndMetafile:
-		return metafile_FillClosedCurve2 (graphics, brush, points, count, tension);
+		return metafile_FillClosedCurve2 (graphics, brush, points, count, tension, fillMode);
 	default:
 		return GenericError;
 	}
 }
 
 GpStatus WINGDIPAPI
-GdipFillClosedCurve2I (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count, REAL tension)
+GdipFillClosedCurve2I (GpGraphics *graphics, GpBrush *brush, GDIPCONST GpPoint *points, INT count, REAL tension, GpFillMode fillMode)
 {
-        /* when tension is 0, the edges are straight lines */
-        if (tension == 0)
-                return GdipFillPolygon2I (graphics, brush, points, count);
+	GpStatus status;
+	GpPointF *pointsF;
 
-	if (!graphics || !brush || !points || count <= 0)
+	if (count < 0)
+		return OutOfMemory;
+	if (!points)
 		return InvalidParameter;
 
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		return cairo_FillClosedCurve2I (graphics, brush, points, count, tension);
-	case GraphicsBackEndMetafile:
-		return metafile_FillClosedCurve2I (graphics, brush, points, count, tension);
-	default:
-		return GenericError;
-	}
+	pointsF = convert_points (points, count);
+	if (!pointsF)
+		return OutOfMemory;
+
+	status = GdipFillClosedCurve2 (graphics, brush, pointsF, count, tension, fillMode);
+
+	GdipFree (pointsF);
+	return status;
 }
 
 GpStatus WINGDIPAPI
 GdipFillRegion (GpGraphics *graphics, GpBrush *brush, GpRegion *region)
 {
-        if (!graphics || !brush || !region)
+	if (!graphics || !brush || !region)
 		return InvalidParameter;
 
 	switch (graphics->backend) {
@@ -1563,6 +1593,9 @@ GdipSetRenderingOrigin (GpGraphics *graphics, INT x, INT y)
 {
 	if (!graphics)
 		return InvalidParameter;
+	
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	graphics->render_origin_x = x;
 	graphics->render_origin_y = y;
@@ -1583,8 +1616,12 @@ GdipGetRenderingOrigin (GpGraphics *graphics, INT *x, INT *y)
 	if (!graphics || !x || !y)
 		return InvalidParameter;
 
-        *x = graphics->render_origin_x;
-        *y = graphics->render_origin_y;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
+	*x = graphics->render_origin_x;
+	*y = graphics->render_origin_y;
+	
 	return Ok;
 }
 
@@ -1593,6 +1630,9 @@ GdipGetDpiX (GpGraphics *graphics, REAL *dpi)
 {
 	if (!graphics || !dpi)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	*dpi = graphics->dpi_x;
 	return Ok;
@@ -1603,6 +1643,9 @@ GdipGetDpiY (GpGraphics *graphics, REAL *dpi)
 {
 	if (!graphics || !dpi)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	*dpi = graphics->dpi_y;
 	return Ok;
@@ -1629,8 +1672,23 @@ GdipSetInterpolationMode (GpGraphics *graphics, InterpolationMode interpolationM
 {
 	if (!graphics)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (interpolationMode <= InterpolationModeInvalid || interpolationMode > InterpolationModeHighQualityBicubic)
+		return InvalidParameter;
 
-	graphics->interpolation = interpolationMode;
+	switch (interpolationMode) {
+		case InterpolationModeDefault:
+		case InterpolationModeLowQuality:
+			graphics->interpolation = InterpolationModeBilinear;
+			break;
+		case InterpolationModeHighQuality:
+			graphics->interpolation = InterpolationModeHighQualityBicubic;
+			break;
+		default:
+			graphics->interpolation = interpolationMode;
+			break;
+	}
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
@@ -1643,12 +1701,16 @@ GdipSetInterpolationMode (GpGraphics *graphics, InterpolationMode interpolationM
 }
 
 GpStatus WINGDIPAPI
-GdipGetInterpolationMode (GpGraphics *graphics, InterpolationMode *imode)
+GdipGetInterpolationMode (GpGraphics *graphics, InterpolationMode *interpolationMode)
 {
-	if (!graphics || !imode)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!interpolationMode)
 		return InvalidParameter;
 
-	*imode = graphics->interpolation;
+	*interpolationMode = graphics->interpolation;
 	return Ok;
 }
 
@@ -1656,6 +1718,10 @@ GpStatus WINGDIPAPI
 GdipSetTextRenderingHint (GpGraphics *graphics, TextRenderingHint mode)
 {
 	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (mode > TextRenderingHintClearTypeGridFit)
 		return InvalidParameter;
 
 	graphics->text_mode = mode;
@@ -1673,8 +1739,11 @@ GdipSetTextRenderingHint (GpGraphics *graphics, TextRenderingHint mode)
 GpStatus WINGDIPAPI
 GdipGetTextRenderingHint (GpGraphics *graphics, TextRenderingHint *mode)
 {
-	if (!graphics || !mode) 
+	if (!graphics || !mode)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 	
 	*mode = graphics->text_mode;
 	return Ok;
@@ -1684,7 +1753,11 @@ GdipGetTextRenderingHint (GpGraphics *graphics, TextRenderingHint *mode)
 GpStatus WINGDIPAPI
 GdipSetPixelOffsetMode (GpGraphics *graphics, PixelOffsetMode pixelOffsetMode)
 {
-	if (!graphics || (pixelOffsetMode == PixelOffsetModeInvalid))
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (pixelOffsetMode <= PixelOffsetModeInvalid || pixelOffsetMode > PixelOffsetModeHalf)
 		return InvalidParameter;
 	
 	graphics->pixel_mode = pixelOffsetMode;
@@ -1706,6 +1779,9 @@ GdipGetPixelOffsetMode (GpGraphics *graphics, PixelOffsetMode *pixelOffsetMode)
 {
 	if (!graphics || !pixelOffsetMode)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 	
 	*pixelOffsetMode = graphics->pixel_mode;
 	return Ok;
@@ -1715,10 +1791,14 @@ GdipGetPixelOffsetMode (GpGraphics *graphics, PixelOffsetMode *pixelOffsetMode)
 GpStatus WINGDIPAPI
 GdipSetTextContrast (GpGraphics *graphics, UINT contrast)
 {
-	/** The gamma correction value must be between 0 and 12.
-	 * The default value is 4. */
-	if (!graphics || contrast < 0 || contrast > 12)
-		return InvalidParameter; 
+	// The gamma correction value must be less than 12.
+	// The default value is 4.
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (contrast > 12)
+		return InvalidParameter;
 
 	graphics->text_contrast = contrast;
 
@@ -1739,35 +1819,56 @@ GdipGetTextContrast (GpGraphics *graphics, UINT *contrast)
 	if (!graphics || !contrast)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	*contrast = graphics->text_contrast;
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
-GdipSetSmoothingMode (GpGraphics *graphics, SmoothingMode mode)
+GdipSetSmoothingMode (GpGraphics *graphics, SmoothingMode smoothingMode)
 {
 	if (!graphics)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (smoothingMode <= SmoothingModeInvalid || smoothingMode > SmoothingModeAntiAlias + 1)
+		return InvalidParameter;
 
-	graphics->draw_mode = mode;
+	switch (smoothingMode) {
+		case SmoothingModeDefault:
+		case SmoothingModeHighSpeed:
+			graphics->draw_mode = SmoothingModeNone;
+			break;
+		case SmoothingModeHighQuality:
+			graphics->draw_mode = SmoothingModeAntiAlias;
+			break;
+		default:
+			graphics->draw_mode = smoothingMode;
+			break;
+	}
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
-		return cairo_SetSmoothingMode (graphics, mode);
+		return cairo_SetSmoothingMode (graphics, smoothingMode);
 	case GraphicsBackEndMetafile:
-		return metafile_SetSmoothingMode (graphics, mode);
+		return metafile_SetSmoothingMode (graphics, smoothingMode);
 	default:
 		return GenericError;
 	}
 }
 
 GpStatus WINGDIPAPI
-GdipGetSmoothingMode (GpGraphics *graphics, SmoothingMode *mode)
+GdipGetSmoothingMode (GpGraphics *graphics, SmoothingMode *smoothingMode)
 {
-	if (!graphics || !mode)
+	if (!graphics || !smoothingMode)
 		return InvalidParameter;
 
-	*mode = graphics->draw_mode;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
+	*smoothingMode = graphics->draw_mode;
 	return Ok;
 }
 
@@ -1799,26 +1900,18 @@ GdipBeginContainer2 (GpGraphics *graphics, GraphicsContainer* state)
 	return status;
 }
 
-/* MonoTODO - depends on incomplete GdipBeginContainer */
 GpStatus WINGDIPAPI
 GdipBeginContainerI (GpGraphics *graphics, GDIPCONST GpRect* dstrect, GDIPCONST GpRect *srcrect, GpUnit unit, GraphicsContainer *state)
 {
-	GpRectF dr, sr;
+	GpRectF dstrectF;
+	GpRectF srcrectF;
 
 	if (!dstrect || !srcrect)
 		return InvalidParameter;
-
-	dr.X = dstrect->X;
-	dr.Y = dstrect->Y;
-	dr.Width = dstrect->Width;
-	dr.Height = dstrect->Height;
-
-	sr.X = srcrect->X;
-	sr.Y = srcrect->Y;
-	sr.Width = srcrect->Width;
-	sr.Height = srcrect->Height;
-
-	return GdipBeginContainer (graphics, &dr, &sr, unit, state);
+	
+	gdip_RectF_from_Rect (dstrect, &dstrectF);
+	gdip_RectF_from_Rect (srcrect, &srcrectF);
+	return GdipBeginContainer (graphics, &dstrectF, &srcrectF, unit, state);
 }
 
 GpStatus WINGDIPAPI
@@ -1838,6 +1931,9 @@ GdipFlush (GpGraphics *graphics, GpFlushIntention intention)
 	if (!graphics)
 		return InvalidParameter;
 
+	if (graphics->state != GraphicsStateValid)
+		return ObjectBusy;
+
 	surface = cairo_get_target (graphics->ct);
 	cairo_surface_flush (surface);
 
@@ -1847,8 +1943,8 @@ GdipFlush (GpGraphics *graphics, GpFlushIntention intention)
 	
 		rect.origin.x = 0;
 		rect.origin.y = 0;
-		rect.size.width = graphics->bounds.Width;
-		rect.size.height = graphics->bounds.Height;
+		rect.size.width = graphics->orig_bounds.Width;
+		rect.size.height = graphics->orig_bounds.Height;
 		void *image = CGBitmapContextCreateImage (cairo_quartz_surface_get_cg_context (surface));
 		CGContextDrawImage (graphics->cg_context, rect, image);
 		CGImageRelease (image);
@@ -1860,8 +1956,14 @@ GdipFlush (GpGraphics *graphics, GpFlushIntention intention)
 GpStatus WINGDIPAPI
 GdipSetClipGraphics (GpGraphics *graphics, GpGraphics *srcgraphics, CombineMode combineMode)
 {
-	if (!graphics || !srcgraphics)
+	if (!graphics)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!srcgraphics)
+		return InvalidParameter;
+	if (srcgraphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	return GdipSetClipRegion (graphics, srcgraphics->clip, combineMode);
 }
@@ -1875,47 +1977,32 @@ GdipSetClipRect (GpGraphics *graphics, REAL x, REAL y, REAL width, REAL height, 
 
 	if (!graphics)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (combineMode > CombineModeComplement)
+		return InvalidParameter;
 
 	rect.X = x;
 	rect.Y = y;
 	rect.Width = width;
 	rect.Height = height;
+	gdip_normalize_rectangle (&rect, &rect);
 
-	status = GdipCreateRegionRect (&rect, &region);
-	if (status != Ok)
-		goto cleanup;
-
-	/* if the matrix is empty, avoid region transformation */
-	if (!gdip_is_matrix_empty (graphics->clip_matrix)) {
-		cairo_matrix_t inverted;
-
-		gdip_cairo_matrix_copy (&inverted, graphics->clip_matrix);
-		cairo_matrix_invert (&inverted);
-
-		GdipTransformRegion (region, &inverted);
+	// Match GDI+ behaviour by setting empty rects to an empty region.
+	if (gdip_is_rectF_empty (&rect, /* allowNegative */ FALSE)) {
+		status = GdipCreateRegion (&region);
+		if (status != Ok)
+			return status;
+		
+		GdipSetEmpty (region);
+	}
+	else {		
+		status = GdipCreateRegionRect (&rect, &region);
+		if (status != Ok)
+			return status;
 	}
 
-	status = GdipCombineRegionRegion (graphics->clip, region, combineMode);	
-	if (status != Ok)
-		goto cleanup;
-
-	switch (graphics->backend) {
-	case GraphicsBackEndCairo:
-		/* adjust cairo clipping according to graphics->clip */
-		status = cairo_SetGraphicsClip (graphics);
-		break;
-	case GraphicsBackEndMetafile:
-		status = metafile_SetClipRect (graphics, x, y, width, height, combineMode);
-		break;
-	default:
-		status = GenericError;
-		break;
-	}
-
-cleanup:
-	if (region)
-		GdipDeleteRegion (region);
-	return status;
+	return GdipSetClipRegion (graphics, region, combineMode);
 }
 
 GpStatus WINGDIPAPI
@@ -1928,23 +2015,51 @@ GpStatus WINGDIPAPI
 GdipSetClipPath (GpGraphics *graphics, GpPath *path, CombineMode combineMode)
 {
 	GpStatus status;
+	GpPath *work;
 
-	if (!graphics || !path)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!path || combineMode > CombineModeComplement)
 		return InvalidParameter;
 
-	status = GdipCombineRegionPath (graphics->clip, path, combineMode);	
+	/* if the matrix is empty, avoid path cloning and transform */
+	if (gdip_is_matrix_empty (graphics->clip_matrix)) {
+		work = path;
+	} else {
+		cairo_matrix_t inverted;
+
+		gdip_cairo_matrix_copy (&inverted, graphics->clip_matrix);
+		cairo_matrix_invert (&inverted);
+
+		status = GdipClonePath (path, &work);
+		if (status != Ok)
+			return status;
+		GdipTransformPath (work, &inverted);
+	}
+
+	status = GdipCombineRegionPath (graphics->clip, work, combineMode);	
 	if (status != Ok)
-		return status;
+		goto cleanup;
 
 	switch (graphics->backend) {
 	case GraphicsBackEndCairo:
 		/* adjust cairo clipping according to graphics->clip */
-		return cairo_SetGraphicsClip (graphics);
+		status = cairo_SetGraphicsClip (graphics);
+		break;
 	case GraphicsBackEndMetafile:
-		return metafile_SetClipPath (graphics, path, combineMode);
+		status = metafile_SetClipPath (graphics, path, combineMode);
+		break;
 	default:
-		return GenericError;
+		status = GenericError;
+		break;
 	}
+
+cleanup:
+	if (work != path)
+		GdipDeletePath (work);
+	return status;	
 }
 
 GpStatus WINGDIPAPI
@@ -1953,7 +2068,11 @@ GdipSetClipRegion (GpGraphics *graphics, GpRegion *region, CombineMode combineMo
 	GpStatus status;
 	GpRegion *work;
 
-	if (!graphics || !region)
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!region || combineMode > CombineModeComplement)
 		return InvalidParameter;
 
 	/* if the matrix is empty, avoid region cloning and transform */
@@ -1996,23 +2115,14 @@ cleanup:
 GpStatus WINGDIPAPI
 GdipSetClipHrgn (GpGraphics *graphics, void *hRgn, CombineMode combineMode)
 {
-	GpStatus status;
-
 	if (!graphics)
 		return InvalidParameter;
-
-	if (hRgn) {
-		status = GdipSetClipRegion (graphics, (GpRegion*)hRgn, combineMode);
-	} else {
-		/* hRng == NULL means an infinite region */
-		GpRegion *work;
-		status = GdipCreateRegion (&work);
-		if (status == Ok) {
-			status = GdipSetClipRegion (graphics, work, combineMode);
-			GdipDeleteRegion (work);
-		}
-	}
-	return status;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (!hRgn)
+		return InvalidParameter;
+		
+	return GdipSetClipRegion (graphics, (GpRegion*)hRgn, combineMode);
 }
 
 GpStatus WINGDIPAPI
@@ -2020,6 +2130,9 @@ GdipResetClip (GpGraphics *graphics)
 {
 	if (!graphics)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	GdipSetInfinite (graphics->clip);
 	cairo_matrix_init_identity (graphics->clip_matrix);
@@ -2041,6 +2154,9 @@ GdipTranslateClip (GpGraphics *graphics, REAL dx, REAL dy)
 
 	if (!graphics)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	status = GdipTranslateRegion (graphics->clip, dx, dy);
 	if (status != Ok)
@@ -2068,6 +2184,9 @@ GdipGetClip (GpGraphics *graphics, GpRegion *region)
 {
 	if (!graphics || !region)
 		return InvalidParameter;
+	
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	gdip_clear_region (region);
 	gdip_copy_region (graphics->clip, region);
@@ -2081,10 +2200,26 @@ GpStatus WINGDIPAPI
 GdipGetClipBounds (GpGraphics *graphics, GpRectF *rect)
 {
 	GpStatus status;
+	BOOL empty;
 	GpRegion *work;
 
 	if (!graphics || !rect)
 		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
+	// The clip bounds for empty bounds should be translated.
+	GdipIsEmptyRegion (graphics->clip, graphics, &empty);
+	if (empty) {
+		status = GdipGetRegionBounds (graphics->clip, graphics, rect);
+		if (status != Ok)
+			return status;
+
+		rect->X += graphics->clip_matrix->x0;
+		rect->Y += graphics->clip_matrix->y0;
+
+		return Ok;
+	}
 
 	/* if the matrix is empty, avoid region cloning and transform */
 	if (gdip_is_matrix_empty (graphics->clip_matrix)) {
@@ -2108,27 +2243,25 @@ GdipGetClipBoundsI (GpGraphics *graphics, GpRect *rect)
 	GpRectF rectF;
 	GpStatus status;
 
-	if (!graphics || !rect)
+	if (!rect)
 		return InvalidParameter;
-	
-	status =  GdipGetRegionBounds (graphics->clip, graphics, &rectF);
-	
+
+	status = GdipGetClipBounds (graphics, &rectF);
 	if (status != Ok)
 		return status;
 
-	rect->X = rectF.X;
-	rect->Y = rectF.Y;
-	rect->Width = rectF.Width;
-	rect->Height = rectF.Height;
-	
+	gdip_Rect_from_RectF (&rectF, rect);
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
 GdipIsClipEmpty (GpGraphics *graphics, BOOL *result)
 {
-	if (!graphics)
+	if (!graphics || !result)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	return GdipIsEmptyRegion (graphics->clip, graphics, result);
 }
@@ -2137,8 +2270,12 @@ GpStatus WINGDIPAPI
 GdipSetVisibleClip_linux (GpGraphics *graphics, GpRect *rect)
 {
 	if (!graphics || !rect)
-		return InvalidParameter;		
-		
+		return InvalidParameter;
+
+	graphics->orig_bounds.X = rect->X;
+	graphics->orig_bounds.Y = rect->Y;
+	graphics->orig_bounds.Width = rect->Width;
+	graphics->orig_bounds.Height = rect->Height;
 	graphics->bounds.X = rect->X;
 	graphics->bounds.Y = rect->Y;
 	graphics->bounds.Width = rect->Width;
@@ -2151,6 +2288,9 @@ GdipGetVisibleClipBounds (GpGraphics *graphics, GpRectF *rect)
 {
 	if (!graphics || !rect)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	if (!gdip_is_InfiniteRegion (graphics->clip)) {
 		GpRectF clipbound;
@@ -2179,29 +2319,32 @@ GdipGetVisibleClipBoundsI (GpGraphics *graphics, GpRect *rect)
 {
 	GpStatus status;
 	GpRectF rectF;
-	
+
 	if (!graphics || !rect)
 		return InvalidParameter;
-	
+
 	status = GdipGetVisibleClipBounds (graphics, &rectF);
 	if (status != Ok)
 		return status;
-	
-	rect->X = rectF.X;
-	rect->Y = rectF.Y;
-	rect->Width = rectF.Width;
-	rect->Height = rectF.Height;
-	
+
+	gdip_Rect_from_RectF (&rectF, rect);
 	return Ok;
 }
 
 GpStatus WINGDIPAPI
 GdipIsVisibleClipEmpty (GpGraphics *graphics, BOOL *result)
 {
+	GpRectF visibleClipBounds;
+
 	if (!graphics || !result)
 		return InvalidParameter;
-		
-	*result = (graphics->bounds.Width == 0 || graphics->bounds.Height == 0);
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	
+	GdipGetVisibleClipBounds (graphics, &visibleClipBounds);
+
+	*result = visibleClipBounds.Width == 0 || visibleClipBounds.Height == 0;
 	return Ok;
 }
 
@@ -2209,18 +2352,13 @@ GpStatus WINGDIPAPI
 GdipIsVisiblePoint (GpGraphics *graphics, REAL x, REAL y, BOOL *result)
 {
 	GpRectF rectF;
-	
+
 	if (!graphics || !result)
 		return InvalidParameter;
-		
-	rectF.X = graphics->bounds.X;
-	rectF.Y = graphics->bounds.Y;
-	rectF.Width = graphics->bounds.Width;
-	rectF.Height = graphics->bounds.Height;	
 
-        *result = gdip_is_Point_in_RectF_inclusive (x, y, &rectF);
-
-        return Ok;
+	gdip_RectF_from_Rect (&graphics->bounds, &rectF);
+	*result = gdip_is_Point_in_RectF_inclusive (x, y, &rectF);
+	return Ok;
 }
 
 GpStatus WINGDIPAPI
@@ -2239,16 +2377,12 @@ GdipIsVisibleRect (GpGraphics *graphics, REAL x, REAL y, REAL width, REAL height
 	if (!graphics || !result)
 		return InvalidParameter;
 
-	if (width ==0 || height ==0) {
+	if (width == 0 || height == 0) {
 		*result = FALSE;
 		return Ok;
 	}
 	
-	boundsF.X = graphics->bounds.X;
-	boundsF.Y = graphics->bounds.Y;
-	boundsF.Width = graphics->bounds.Width;
-	boundsF.Height = graphics->bounds.Height;	
-
+	gdip_RectF_from_Rect (&graphics->bounds, &boundsF);
 	recthit.X = x;
 	recthit.Y = y;
 	recthit.Width = width;
@@ -2280,6 +2414,9 @@ GdipSetCompositingMode (GpGraphics *graphics, CompositingMode compositingMode)
 	if (!graphics)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	graphics->composite_mode = compositingMode;
 
 	switch (graphics->backend) {
@@ -2298,6 +2435,9 @@ GdipGetCompositingMode (GpGraphics *graphics, CompositingMode *compositingMode)
 	if (!graphics || !compositingMode)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	*compositingMode = graphics->composite_mode;
 	return Ok;
 }
@@ -2307,6 +2447,9 @@ GdipSetCompositingQuality (GpGraphics *graphics, CompositingQuality compositingQ
 {
 	if (!graphics)
 		return InvalidParameter;
+
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
 
 	graphics->composite_quality = compositingQuality;
 
@@ -2327,6 +2470,9 @@ GdipGetCompositingQuality (GpGraphics *graphics, CompositingQuality *compositing
 	if (!graphics || !compositingQuality)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	*compositingQuality = graphics->composite_quality;
 	return Ok;
 }
@@ -2338,9 +2484,19 @@ GdipGetNearestColor (GpGraphics *graphics, ARGB *argb)
 }
 
 GpStatus WINGDIPAPI
+GdipResetPageTransform (GpGraphics *graphics)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
 GdipSetPageScale (GpGraphics *graphics, REAL scale)
 {
-	if (!graphics) 
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (scale <= 0.0 || scale > 1000000032)
 		return InvalidParameter;
 	
 	graphics->scale = scale;	
@@ -2362,6 +2518,9 @@ GdipGetPageScale (GpGraphics *graphics, REAL *scale)
 	if (!graphics | !scale)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	*scale = graphics->scale;
 	return Ok;
 }
@@ -2369,7 +2528,11 @@ GdipGetPageScale (GpGraphics *graphics, REAL *scale)
 GpStatus WINGDIPAPI
 GdipSetPageUnit (GpGraphics *graphics, GpUnit unit)
 {
-	if (!graphics) 
+	if (!graphics)
+		return InvalidParameter;
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+	if (unit <= UnitWorld || unit > UnitCairoPoint)
 		return InvalidParameter;
 
 	graphics->page_unit = unit;
@@ -2391,6 +2554,9 @@ GdipGetPageUnit (GpGraphics *graphics, GpUnit *unit)
 	if (!graphics || !unit)
 		return InvalidParameter;
 
+	if (graphics->state == GraphicsStateBusy)
+		return ObjectBusy;
+
 	*unit = graphics->page_unit;
 	return Ok;
 }
@@ -2398,23 +2564,113 @@ GdipGetPageUnit (GpGraphics *graphics, GpUnit *unit)
 GpStatus WINGDIPAPI
 GdipTransformPoints (GpGraphics *graphics, GpCoordinateSpace destSpace, GpCoordinateSpace srcSpace, GpPointF *points, INT count)
 {
-        static int      called = 0;
+	static int called = 0;
 
-        if (!called) {
-                printf("NOT IMPLEMENTED YET:GdipTransformPoints (GpGraphics *graphics, GpCoordinateSpace destSpace %d, GpCoordinateSpace srcSpace %d, GpPointF *points, int count %d)\n", destSpace, srcSpace, count);
-        }
-        /* return NotImplemented; */
-        return Ok;
+	if (!called) {
+		printf("NOT IMPLEMENTED YET:GdipTransformPoints (GpGraphics *graphics, GpCoordinateSpace destSpace %d, GpCoordinateSpace srcSpace %d, GpPointF *points, int count %d)\n", destSpace, srcSpace, count);
+	}
+	/* return NotImplemented; */
+	return Ok;
 }
 
 GpStatus WINGDIPAPI
 GdipTransformPointsI (GpGraphics *graphics, GpCoordinateSpace destSpace, GpCoordinateSpace srcSpace, GpPoint *points, INT count)
 {
-        static int      called = 0;
+	static int called = 0;
 
-        if (!called) {
-                printf("NOT IMPLEMENTED YET:GdipTransformPointsI (GpGraphics *graphics, GpCoordinateSpace destSpace, GpCoordinateSpace srcSpace, GpPoint *points, int count)\n");
-        }
-        /* return NotImplemented; */
-        return Ok;
+	if (!called) {
+		printf("NOT IMPLEMENTED YET:GdipTransformPointsI (GpGraphics *graphics, GpCoordinateSpace destSpace, GpCoordinateSpace srcSpace, GpPoint *points, int count)\n");
+	}
+	/* return NotImplemented; */
+	return Ok;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestPoint (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST PointF *destPoint,
+	EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestPointI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Point *destPoint,
+	EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestRect (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST RectF *destRect,
+	EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestRectI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Rect *destRect,
+	EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes )
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestPoints (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST PointF *destPoints, INT count,
+    EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileDestPointsI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Point *destPoints, INT count,
+	EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes )
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestPoint (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST PointF *destPoint, GDIPCONST RectF *srcRect,
+    Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes * imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestPointI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Point *destPoint, GDIPCONST Rect *srcRect,
+    Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestRect (GpGraphics * graphics, GDIPCONST GpMetafile *metafile, GDIPCONST RectF *destRect, GDIPCONST RectF *srcRect,
+	Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestRectI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Rect *destRect, GDIPCONST Rect *srcRect,
+	Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestPoints (GpGraphics *graphics, GDIPCONST GpMetafile * metafile, GDIPCONST PointF *destPoints, INT count, GDIPCONST RectF *srcRect,
+	Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+GpStatus WINGDIPAPI
+GdipEnumerateMetafileSrcRectDestPointsI (GpGraphics *graphics, GDIPCONST GpMetafile *metafile, GDIPCONST Point *destPoints, INT count, GDIPCONST Rect *srcRect,
+	Unit srcUnit, EnumerateMetafileProc callback, VOID *callbackData, GDIPCONST GpImageAttributes *imageAttributes)
+{
+	return NotImplemented;
+}
+
+HPALETTE WINGDIPAPI
+GdipCreateHalftonePalette()
+{
+	return NULL;
 }

@@ -7,6 +7,13 @@ have to be fixed in libgdiplus.
 
 - WMF and EMF. We have limited support metafiles.
 
+* Path
+
+-   add missing implementation for
+    -   [path gradient brush](https://bugzilla.novell.com/show_bug.cgi?id=321034)
+    -   [path widen](https://bugzilla.novell.com/show_bug.cgi?id=320856)
+    -   [path warp](https://bugzilla.novell.com/show_bug.cgi?id=400775)
+
 ---- Not implemented / partially implemented functions
 
 * Handle functions
@@ -29,7 +36,7 @@ GdipSetTextContrast		[2]
 GdipTransformPoints
 GdipTransformPointsI
 
-* Image handeling
+* Image handling
 
 GdipSetImageAttributesThreshold
 GdipSetImageAttributesOutputChannelColorProfile
@@ -40,23 +47,10 @@ GdipSaveImageToStream
 GdipSaveAdd
 GdipSaveAddImage 
 
-* Pens and brushes
-
-GdipSetPenDashCap197819		[2]
-GdipGetPenDashCap197819		[2]
-GdipSetPenCustomStartCap	[3]
-GdipGetPenCustomStartCap	[3]
-GdipSetPenCustomEndCap		[3]
-GdipGetPenCustomEndCap		[3]
-
 * Functions related to paths
 
 GdipAddString			[1]
 GdipAddStringI			[1]
-GdipIsOutlineVisiblePathPoint	[4]
-GdipIsOutlineVisiblePathPointI	[4]
-GdipIsVisiblePathPoint		[4]
-GdipIsVisiblePathPointI		[4]
 GdipWindingModeOutline
 GdipWidenPath
 GdipWarpPath
