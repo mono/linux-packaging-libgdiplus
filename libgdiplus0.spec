@@ -103,7 +103,7 @@ find . -name INSTALL | xargs rm -f
 %files
 %defattr(-, root, root)
 %{_libdir}/libgdiplus.so*
-%doc AUTHORS COPYING ChangeLog* NEWS README
+%doc AUTHORS COPYING ChangeLog* NEWS README.md
 
 %files -n libgdiplus-devel
 %defattr(-, root, root)
