@@ -1,3 +1,9 @@
+libgdiplus (6.0.1-0xamarin1) preview; urgency=medium
+
+  * New release - libgdiplus-6.0.1.tar.gz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 05 Aug 2019 14:01:29 +0000
+
 libgdiplus (6.0-0xamarin3) preview; urgency=medium
 
   [ Xamarin Public Jenkins (auto-signing) ]
