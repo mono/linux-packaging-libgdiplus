@@ -1,0 +1,13 @@
+diff --git a/src/graphics-path.c b/src/graphics-path.c
+index 8d0f91c..1b8de99 100644
+--- a/src/graphics-path.c
++++ b/src/graphics-path.c
+@@ -1238,7 +1238,7 @@ GdipAddPathString (GpPath *path, GDIPCONST WCHAR *string, int length,
+ 	if (emSize == 0)
+ 		return GenericError;
+ 
+-	cs = cairo_recording_surface_create (CAIRO_CONTENT_COLOR_ALPHA, NULL);
++	cs = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+ 	if (cairo_surface_status (cs) != CAIRO_STATUS_SUCCESS) {
+ 		cairo_surface_destroy (cs);
+ 		return OutOfMemory;

@@ -23,6 +23,7 @@ Version:	6.0
 Release:	0.xamarin.3
 Url:            http://go-mono.org/
 Source0:        http://download.mono-project.com/sources/%{real_name}/%{name}-%{version}.tar.gz
+Patch0:		centos-6-is-an-increasing-maintenance-burden.diff
 Summary:        Open Source Implementation of the GDI+ API
 License:        (LGPL-2.1+ or MPL-1.1) and MIT
 Group:          Development/Libraries/Other
@@ -78,6 +79,9 @@ using System.Drawing.
 
 %prep
 %setup -q -n %{real_name}-%{version}
+%if 0%{?rhel} <= 7
+%patch0 -p1
+%endif
 
 %build
 autoreconf -fiv
