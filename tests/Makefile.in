@@ -105,8 +105,7 @@ noinst_PROGRAMS = testadjustablearrowcap$(EXEEXT) testbitmap$(EXEEXT) \
 	testreversepath$(EXEEXT) testsolidbrush$(EXEEXT) \
 	teststringformat$(EXEEXT) testtext$(EXEEXT) \
 	testtexturebrush$(EXEEXT) testtiffcodec$(EXEEXT) \
-	testwmfcodec$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_X11_TRUE@am__append_1 = testgdi
+	testwmfcodec$(EXEEXT)
 TESTS = testadjustablearrowcap$(EXEEXT) testbitmap$(EXEEXT) \
 	testbits$(EXEEXT) testbmpcodec$(EXEEXT) testbrush$(EXEEXT) \
 	testclip$(EXEEXT) testcodecs$(EXEEXT) \
@@ -136,7 +135,6 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@HAVE_X11_TRUE@am__EXEEXT_1 = testgdi$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am_testadjustablearrowcap_OBJECTS = testadjustablearrowcap.$(OBJEXT)
 testadjustablearrowcap_OBJECTS = $(am_testadjustablearrowcap_OBJECTS)
@@ -163,9 +161,6 @@ am_testemfcodec_OBJECTS = testemfcodec.$(OBJEXT)
 testemfcodec_OBJECTS = $(am_testemfcodec_OBJECTS)
 am_testfont_OBJECTS = testfont.$(OBJEXT)
 testfont_OBJECTS = $(am_testfont_OBJECTS)
-am__testgdi_SOURCES_DIST = testgdi.c
-@HAVE_X11_TRUE@am_testgdi_OBJECTS = testgdi.$(OBJEXT)
-testgdi_OBJECTS = $(am_testgdi_OBJECTS)
 am_testgeneral_OBJECTS = testgeneral.$(OBJEXT)
 testgeneral_OBJECTS = $(am_testgeneral_OBJECTS)
 am_testgifcodec_OBJECTS = testgifcodec.$(OBJEXT)
@@ -258,7 +253,7 @@ SOURCES = $(testadjustablearrowcap_SOURCES) $(testbitmap_SOURCES) \
 	$(testbits_SOURCES) $(testbmpcodec_SOURCES) \
 	$(testbrush_SOURCES) $(testclip_SOURCES) $(testcodecs_SOURCES) \
 	$(testcustomlinecap_SOURCES) $(testemfcodec_SOURCES) \
-	$(testfont_SOURCES) $(testgdi_SOURCES) $(testgeneral_SOURCES) \
+	$(testfont_SOURCES) $(testgeneral_SOURCES) \
 	$(testgifcodec_SOURCES) $(testgpimage_SOURCES) \
 	$(testgraphics_SOURCES) $(testgraphicsdraw_SOURCES) \
 	$(testgraphicsfill_SOURCES) $(testgraphicspath_SOURCES) \
@@ -275,16 +270,15 @@ DIST_SOURCES = $(testadjustablearrowcap_SOURCES) $(testbitmap_SOURCES) \
 	$(testbits_SOURCES) $(testbmpcodec_SOURCES) \
 	$(testbrush_SOURCES) $(testclip_SOURCES) $(testcodecs_SOURCES) \
 	$(testcustomlinecap_SOURCES) $(testemfcodec_SOURCES) \
-	$(testfont_SOURCES) $(am__testgdi_SOURCES_DIST) \
-	$(testgeneral_SOURCES) $(testgifcodec_SOURCES) \
-	$(testgpimage_SOURCES) $(testgraphics_SOURCES) \
-	$(testgraphicsdraw_SOURCES) $(testgraphicsfill_SOURCES) \
-	$(testgraphicspath_SOURCES) $(testhatchbrush_SOURCES) \
-	$(testicocodec_SOURCES) $(testimageattributes_SOURCES) \
-	$(testjpegcodec_SOURCES) $(testlineargradientbrush_SOURCES) \
-	$(testmatrix_SOURCES) $(testmetafile_SOURCES) \
-	$(testpathgradientbrush_SOURCES) $(testpen_SOURCES) \
-	$(testpng_SOURCES) $(testpngcodec_SOURCES) \
+	$(testfont_SOURCES) $(testgeneral_SOURCES) \
+	$(testgifcodec_SOURCES) $(testgpimage_SOURCES) \
+	$(testgraphics_SOURCES) $(testgraphicsdraw_SOURCES) \
+	$(testgraphicsfill_SOURCES) $(testgraphicspath_SOURCES) \
+	$(testhatchbrush_SOURCES) $(testicocodec_SOURCES) \
+	$(testimageattributes_SOURCES) $(testjpegcodec_SOURCES) \
+	$(testlineargradientbrush_SOURCES) $(testmatrix_SOURCES) \
+	$(testmetafile_SOURCES) $(testpathgradientbrush_SOURCES) \
+	$(testpen_SOURCES) $(testpng_SOURCES) $(testpngcodec_SOURCES) \
 	$(testregion_SOURCES) $(testreversepath_SOURCES) \
 	$(testsolidbrush_SOURCES) $(teststringformat_SOURCES) \
 	$(testtext_SOURCES) $(testtexturebrush_SOURCES) \
@@ -676,11 +670,16 @@ LDADDS = \
 	$(top_builddir)/src/libgdiplus.la \
 	-lm
 
-@HAVE_X11_TRUE@testgdi_DEPENDENCIES = $(TEST_DEPS)
-@HAVE_X11_TRUE@testgdi_LDADD = $(LDADDS)
-@HAVE_X11_TRUE@testgdi_SOURCES = \
-@HAVE_X11_TRUE@	testgdi.c
 
+#if HAVE_X11
+#noinst_PROGRAMS += testgdi
+#
+#testgdi_DEPENDENCIES = $(TEST_DEPS)
+#testgdi_LDADD = $(LDADDS)
+#
+#testgdi_SOURCES =		\
+#	testgdi.c
+#endif HAVE_X11
 testadjustablearrowcap_SOURCES = \
 	testadjustablearrowcap.c
 
@@ -962,10 +961,6 @@ testfont$(EXEEXT): $(testfont_OBJECTS) $(testfont_DEPENDENCIES) $(EXTRA_testfont
 	@rm -f testfont$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testfont_OBJECTS) $(testfont_LDADD) $(LIBS)
 
-testgdi$(EXEEXT): $(testgdi_OBJECTS) $(testgdi_DEPENDENCIES) $(EXTRA_testgdi_DEPENDENCIES) 
-	@rm -f testgdi$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(testgdi_OBJECTS) $(testgdi_LDADD) $(LIBS)
-
 testgeneral$(EXEEXT): $(testgeneral_OBJECTS) $(testgeneral_DEPENDENCIES) $(EXTRA_testgeneral_DEPENDENCIES) 
 	@rm -f testgeneral$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testgeneral_OBJECTS) $(testgeneral_LDADD) $(LIBS)
@@ -1086,7 +1081,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testcustomlinecap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testemfcodec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testfont.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgeneral.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgifcodec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgpimage.Po@am__quote@
