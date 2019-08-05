@@ -20,7 +20,7 @@
 
 Name:           libgdiplus0
 Version:	6.0.1
-Release:	0.xamarin.1
+Release:	0.xamarin.2
 Url:            http://go-mono.org/
 Source0:        http://download.mono-project.com/sources/%{real_name}/%{name}-%{version}.tar.gz
 Patch0:		centos-6-is-an-increasing-maintenance-burden.diff
