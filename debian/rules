@@ -13,7 +13,7 @@ VERSION = $(shell echo $(DEB_VERSION) | cut -d"-" -f1 | sed 's/+dfsg.*//')
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
-CFLAGS = -Wall -g
+CFLAGS += -Wall -g
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
@@ -38,7 +38,7 @@ override_dh_auto_configure:
 	CFLAGS="$(CFLAGS)" ./configure \
 	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 	  --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
-	perl -pe 's/-Werror//' -i src/Makefile
+	perl -pe 's/-Werror(=\S+|)//' -i src/Makefile
 	
 override_dh_auto_build:
 	$(MAKE)
