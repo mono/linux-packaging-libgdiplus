@@ -533,7 +533,7 @@ GdipRestoreGraphics (GpGraphics *graphics, GraphicsState state)
 	graphics->pixel_mode = pos_state->pixel_mode;
 	graphics->text_contrast = pos_state->text_contrast;
 
-	graphics->saved_status_pos = state;
+	graphics->saved_status_pos = state - 1;
 
 	/* re-adjust clipping (region and matrix) */
 	gdip_cairo_set_matrix (graphics, graphics->copy_of_ctm);
@@ -2002,7 +2002,10 @@ GdipSetClipRect (GpGraphics *graphics, REAL x, REAL y, REAL width, REAL height, 
 			return status;
 	}
 
-	return GdipSetClipRegion (graphics, region, combineMode);
+	status = GdipSetClipRegion (graphics, region, combineMode);
+	GdipDeleteRegion (region);
+
+	return status;
 }
 
 GpStatus WINGDIPAPI
