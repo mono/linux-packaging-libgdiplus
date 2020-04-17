@@ -530,8 +530,10 @@ GdipDrawImagePoints (GpGraphics *graphics, GpImage *image, GDIPCONST GpPointF *d
 	}
 
 	/* Create a surface for this bitmap if one doesn't exist */
-	if (gdip_bitmap_ensure_surface (image) == NULL)
+	if (gdip_bitmap_ensure_surface (image) == NULL) {
+		GdipDeleteMatrix(matrix);
 		return OutOfMemory;
+	}
 
 	pattern = cairo_pattern_create_for_surface (image->surface);
 	cairo_pattern_set_filter (pattern, gdip_get_cairo_filter (graphics->interpolation));
@@ -699,8 +701,10 @@ GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
 			/* We're ok just cloning the bitmap, we don't need the image data
 			 * and we destroy it before we leave this function */
 			status = gdip_bitmap_clone (image, &imgflipX);
-			if (status != Ok)
+			if (status != Ok) {
+				gdip_bitmap_dispose(imgflipX);
 				return status;
+			}
 
 			status = gdip_flip_x (imgflipX);
 			if (status != Ok) {
@@ -713,11 +717,15 @@ GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
 		
 		if (flipYOn) {			
 			status = gdip_bitmap_clone (image, &imgflipY);
-			if (status != Ok)
+			if (status != Ok) {
+				gdip_bitmap_dispose(imgflipX);
+				gdip_bitmap_dispose(imgflipY);
 				return status;
+			}
 
 			status = gdip_flip_y (imgflipY);
 			if (status != Ok) {
+				gdip_bitmap_dispose (imgflipX);
 				gdip_bitmap_dispose (imgflipY);
 				return status;
 			}
@@ -727,19 +735,27 @@ GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
 		
 		if (flipXOn && flipYOn) {			
 			status = gdip_bitmap_clone (image, &imgflipXY);
-			if (status != Ok)
+			if (status != Ok) {
+				gdip_bitmap_dispose(imgflipX);
+				gdip_bitmap_dispose(imgflipY);
+				gdip_bitmap_dispose(imgflipXY);
 				return status;
+			}
 
 			status = gdip_flip_x (imgflipXY);
 			if (status != Ok) {
-				gdip_bitmap_dispose (imgflipXY);
+				gdip_bitmap_dispose(imgflipX);
+				gdip_bitmap_dispose(imgflipY);
+				gdip_bitmap_dispose(imgflipXY);
 				return status;
 			}
 
 			status = gdip_flip_y (imgflipXY);
 			if (status != Ok) {
-				gdip_bitmap_dispose (imgflipXY);
-				return Ok;
+				gdip_bitmap_dispose(imgflipX);
+				gdip_bitmap_dispose(imgflipY);
+				gdip_bitmap_dispose(imgflipXY);
+				return status;
 			}
 
 			gdip_bitmap_ensure_surface (imgflipXY);			
@@ -843,10 +859,11 @@ GdipDrawImageRectRect (GpGraphics *graphics, GpImage *image,
 	}
 
 	if (allocated) {
+		gdip_bitmap_invalidate_surface (image);
 		image->active_bitmap->scan0 = org;
 		image->active_bitmap->pixel_format = org_format;
 		image->surface = org_surface;
-		GdipFree (dest);
+		// NOTE: dest is freed by gdip_bitmap_invalidate_surface above
 	}
 	
 	return Ok;
@@ -940,8 +957,10 @@ GdipDrawImagePointsRectI (GpGraphics *graphics, GpImage *image, GDIPCONST GpPoin
 	if (!pointsF)
 		return OutOfMemory;
 
-	return GdipDrawImagePointsRect (graphics, image, pointsF, count, srcx, srcy, srcwidth, srcheight, 
+	GpStatus status = GdipDrawImagePointsRect(graphics, image, pointsF, count, srcx, srcy, srcwidth, srcheight,
 		srcUnit, imageAttributes, callback, callbackData);
+	GdipFree(pointsF);
+	return status;
 }
 
 /*
@@ -1073,8 +1092,10 @@ gdip_get_imageformat_from_codec_clsid (CLSID *encoderCLSID)
 	encoders = GdipAlloc (size);
 
 	status = GdipGetImageEncoders (numEncoders, size, encoders);
-	if (status != Ok)
+	if (status != Ok) {
+		GdipFree(encoders);
 		return INVALID;
+	}
 
 	for (cnt = 0, encoder = encoders; cnt < numEncoders; cnt++, encoder++) {
 		if (memcmp (&encoder->Clsid, encoderCLSID, sizeof (GUID)) == 0) {
@@ -1596,6 +1617,7 @@ gdip_rotate_orthogonal_flip_x (GpImage *image, int angle, BOOL flip_x)
 	image->active_bitmap->scan0 = rotated;
 	image->active_bitmap->reserved |= GBD_OWN_SCAN0;	
 
+	gdip_bitmap_flush_surface (image);
 	gdip_bitmap_invalidate_surface (image);
 
 	return Ok;
@@ -1774,6 +1796,7 @@ gdip_rotate_flip_packed_indexed (GpImage *image, PixelFormat pixel_format, int a
 
 	/* It shouldn't be possible for an indexed image to have one,
 	 * but if it does, it needs to be killed. */
+	gdip_bitmap_flush_surface (image);
 	gdip_bitmap_invalidate_surface (image);
 
 	return Ok;
