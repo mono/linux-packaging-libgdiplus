@@ -1,3 +1,9 @@
+libgdiplus (6.0.5-0xamarin1) preview; urgency=medium
+
+  * New release - libgdiplus-6.0.5.tar.gz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 17 Apr 2020 13:23:14 +0000
+
 libgdiplus (6.0.4-0xamarin6) preview; urgency=medium
 
   * Packaging bugfix:
